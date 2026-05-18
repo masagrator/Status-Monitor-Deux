@@ -1,0 +1,10 @@
+[status-monitor-deux]
+key_combo=L+DDOWN+RSTICK
+battery_avg_iir_filter=false
+battery_time_left_refreshrate=60
+font_cache=true
+touch_screen=true
+motion_control=true
+left_joycon_motion_key_combo=LEFTSR+LSTICK
+right_joycon_motion_key_combo=RIGHTSL+RSTICK
+pro_controller_motion_key_combo=ZR+R+RSTICK
