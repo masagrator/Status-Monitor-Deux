@@ -19,6 +19,7 @@ extern "C" {
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <switch.h>
 
 namespace smd {
 
@@ -363,11 +364,7 @@ static const PredefinedConst kSystemKeys[] = {
     { "System_Key_Left",    1LL << 12 },
     { "System_Key_Up",      1LL << 13 },
     { "System_Key_Right",   1LL << 14 },
-    { "System_Key_Down",    1LL << 15 },
-    { "System_Key_LeftSL",  1LL << 24 },
-    { "System_Key_LeftSR",  1LL << 25 },
-    { "System_Key_RightSL", 1LL << 26 },
-    { "System_Key_RightSR", 1LL << 27 },
+    { "System_Key_Down",    1LL << 15 }
 };
 static constexpr size_t kSystemKeysCount = sizeof(kSystemKeys) / sizeof(kSystemKeys[0]);
 
@@ -501,6 +498,16 @@ struct Document::Impl {
     // lastError changes (we just compare lengths + first chars cheaply).
     mutable std::string lastErrorWrapped;
     mutable size_t      lastErrorWrappedOf = 0;  // size of lastError when wrapped
+
+    uint32_t crc32;
+
+    // Set by Reset(/*freeze=*/true). When true, Evaluate() skips
+    // RefreshScratches() so every host-bound value and every cached string
+    // VAR stays exactly as it was on the previous frame. Cleared at the
+    // start of Evaluate() after the skip decision is made, so it is
+    // automatically a one-shot: the NEXT Reset()/Evaluate() cycle behaves
+    // normally unless the caller passes freeze=true again.
+    bool m_frozen = false;
 };
 
 // ===========================================================================
@@ -2511,7 +2518,12 @@ bool Document::LoadFromMemory(const char* data, size_t size) {
             return false;
         }
     }
+    m_impl->crc32 = crc32Calculate(data, size);
     return true;
+}
+
+uint32_t Document::GetFileHash() {
+    return m_impl->crc32;
 }
 
 // ---------------------------------------------------------------------------
@@ -4250,7 +4262,13 @@ static bool GraphConditionMatches(void* state, double sampleValue) {
 
 bool Document::Evaluate(Callback cb, void* user) {
     if (!cb) { m_impl->lastError = "no callback"; return false; }
-    RefreshScratches(*m_impl);
+    // When frozen, replay the script using the exact same host values and
+    // cached string state as the previous frame. This is used for a DryRun
+    // that should produce identical geometry to the real pass without
+    // re-pulling live data (e.g. for clamping before RecordCallback).
+    if (!m_impl->m_frozen)
+        RefreshScratches(*m_impl);
+    m_impl->m_frozen = false;
 
     // Per-Document persistent cache for ad-hoc arithmetic chunks built by
     // EvalCondition. The cache is owned by Impl so the te_expr trees
@@ -4366,6 +4384,15 @@ bool Document::Evaluate(Callback cb, void* user) {
                     cmd.text     = n.textIsInlineFormat
                         ? EvalStringExpr(*m_impl, n.textInlineExpr)
                         : MaterializeText(*m_impl, n.textIsLiteral, n.textStrOrKey);
+                    // Strip a trailing newline so the renderer doesn't measure
+                    // a phantom empty line below the last visible line of text.
+                    // This matters for bottom/right clamping (e.g. Mini.smd),
+                    // where an extra \n inflates the reported height and causes
+                    // the widget to land a few pixels short of the edge.
+                    if (!cmd.text.empty() && cmd.text.back() == '\n')
+                        cmd.text.pop_back();
+                    if (!cmd.text.empty() && cmd.text.back() == '\r')
+                        cmd.text.pop_back();
                     cb(cmd, user);
                     break;
                 }
@@ -4613,9 +4640,11 @@ bool Document::Evaluate(Callback cb, void* user) {
     return ok;
 }
 
-void Document::Reset() {
+void Document::Reset(bool freeze) {
     if (!m_impl) return;
     Impl& im = *m_impl;
+    im.m_frozen = freeze;
+    if (freeze) return;  // caller wants Evaluate() to replay with cached state
     // Pull host-bound values into scratch doubles BEFORE we re-seed string
     // VARs below. Otherwise MaterializeText on config Format defaults
     // (line 3741) evaluates format args against scratch state left over

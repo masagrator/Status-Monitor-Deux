@@ -14,7 +14,7 @@ HidSixAxisSensorHandle sixaxisHandles[Controller_Max];
 class MainMenu : public tsl::Gui {
 public:
     std::vector<Designs> filesChecked;
-    const std::string root_path = "sdmc:/config/status-monitor/modes/";
+    const std::string root_path = "sdmc:/config/status-monitor-deux/modes/";
     std::string standard_path = root_path;
 
     MainMenu(std::string rel_path) {
@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
 		if (strcasecmp(argv[arg], "--file") == 0) {
 			if (arg + 1 < argc) {
 				const char* smd_filename = argv[arg+1];
-				std::string path = "sdmc:/config/status-monitor/modes/";
+				std::string path = "sdmc:/config/status-monitor-deux/modes/";
 				path += smd_filename;
 				
 				struct stat filedata;

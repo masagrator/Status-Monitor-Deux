@@ -857,8 +857,8 @@ void MiscThreadLoop(void*) {
 }
 
 //Sixaxis
-std::string leftJoyconMotionKeyCombo = "LEFTSR+LSTICK";
-std::string rightJoyconMotionKeyCombo = "RIGHTSL+RSTICK";
+std::string leftJoyconMotionKeyCombo = "ZL+L+LSTICK";
+std::string rightJoyconMotionKeyCombo = "ZR+R+RSTICK";
 std::string proControllerMotionKeyCombo = "ZR+R+RSTICK";
 
 enum Controller {
@@ -1087,10 +1087,6 @@ uint64_t MapButtons(const std::string& buttonCombo) {
 		{"DRIGHT", HidNpadButton_Right},
 		{"SL", HidNpadButton_AnySL},
 		{"SR", HidNpadButton_AnySR},
-		{"LEFTSL", HidNpadButton_LeftSL},
-		{"LEFTSR", HidNpadButton_LeftSR},
-		{"RIGHTSL", HidNpadButton_RightSL},
-		{"RIGHTSR", HidNpadButton_RightSR},
 		{"LSTICK", HidNpadButton_StickL},
 		{"RSTICK", HidNpadButton_StickR},
 		{"LS", HidNpadButton_StickL},
@@ -1135,6 +1131,60 @@ ALWAYS_INLINE bool isKeyComboPressed(uint64_t keysHeld, uint64_t keysDown, uint6
 		if (second_time_checked - first_time_checked > expectedPressTime) return true;
 	}
 	else first_time_checked = 0;
+	return false;
+}
+
+void createDefaultFile(std::string filepath) {
+	mkdir("sdmc:/config/", 69);
+	mkdir("sdmc:/config/status-monitor-deux/", 420);
+	//setIniFile(filepath, "status-monitor-deux", "key_combo", "L+DDOWN+RSTICK", "");
+	setIniFile(filepath, "status-monitor-deux", "battery_avg_iir_filter", "false", "");
+	setIniFile(filepath, "status-monitor-deux", "battery_time_left_refreshrate", "60", "");
+	setIniFile(filepath, "status-monitor-deux", "font_cache", "true", "");
+	setIniFile(filepath, "status-monitor-deux", "touch_screen", "true", "");
+	setIniFile(filepath, "status-monitor-deux", "motion_control", "true", "");
+	setIniFile(filepath, "status-monitor-deux", "left_joycon_motion_key_combo", "ZL+L+LSTICK", "");
+	setIniFile(filepath, "status-monitor-deux", "right_joycon_motion_key_combo", "ZR+R+RSTICK", "");
+	setIniFile(filepath, "status-monitor-deux", "pro_controller_motion_key_combo", "ZR+R+RSTICK", "");
+}
+
+bool ProcessSmdSettings(std::string filename, uint32_t crc32, uint16_t* x, uint16_t* y) {
+	std::string configIniPath = "sdmc:/config/status-monitor-deux/config.ini";
+	FILE* configFileIn = fopen(configIniPath.c_str(), "r");
+	if (configFileIn) {
+		fseek(configFileIn, 0, SEEK_END);
+		long fileSize = ftell(configFileIn);
+		rewind(configFileIn);
+		// Parse the INI data
+		std::string fileDataString(fileSize, '\0');
+		fread(&fileDataString[0], sizeof(char), fileSize, configFileIn);
+		fclose(configFileIn);
+		
+		tsl::hlp::ini::IniData parsedData = tsl::hlp::ini::parseIni(fileDataString);
+		if (parsedData.find(filename.c_str()) != parsedData.end()) {
+			if (parsedData[filename.c_str()].find("hash") != parsedData[filename.c_str()].end()) {
+				auto key = parsedData[filename.c_str()]["hash"];
+				uint32_t crc32_to_compare;
+				auto [ptr, ec] = std::from_chars(key.data(), key.data()+key.size(), crc32_to_compare, 16);
+				if ((ec != std::errc{}) || (crc32 != crc32_to_compare)) return false;
+			}
+			else return false;
+			if (parsedData[filename.c_str()].find("x") != parsedData[filename.c_str()].end()) {
+				auto key = parsedData[filename.c_str()]["x"];
+				auto [ptr, ec] = std::from_chars(key.data(), key.data()+key.size(), *x);
+				if (ec != std::errc{}) return false;
+			}
+			else return false;
+			if (parsedData[filename.c_str()].find("y") != parsedData[filename.c_str()].end()) {
+				auto key = parsedData[filename.c_str()]["y"];
+				auto [ptr, ec] = std::from_chars(key.data(), key.data()+key.size(), *y);
+				if (ec != std::errc{}) return false;
+				return true;
+			}
+			else return false;
+		}
+	}
+	createDefaultFile(configIniPath);
 	return false;
 }
 
@@ -1194,18 +1244,21 @@ void ParseIniFile() {
 			}
 			if (parsedData["status-monitor-deux"].find("battery_time_left_refreshrate") != parsedData["status-monitor-deux"].end()) {
 				auto key = parsedData["status-monitor-deux"]["battery_time_left_refreshrate"];
-				long maxSeconds = 60;
-				long minSeconds = 1;
+				constexpr uint32_t maxSeconds = 60;
+				constexpr uint32_t minSeconds = 1;
 		
-				long rate = atol(key.c_str());
+				uint32_t rate;
+				auto [ptr, ec] = std::from_chars(key.data(), key.data() + key.size(), rate);
 
-				if (rate > maxSeconds) {
-					rate = maxSeconds;
+				if (ec == std::errc{}) {
+					if (rate > maxSeconds) {
+						rate = maxSeconds;
+					}
+					else if (rate < minSeconds) {
+						rate = minSeconds;
+					}
+					batteryTimeLeftRefreshRate = rate;
 				}
-				else if (rate < minSeconds) {
-					rate = minSeconds;
-				}
-				batteryTimeLeftRefreshRate = rate;
 			}
 			if (parsedData["status-monitor-deux"].find("touch_screen") != parsedData["status-monitor-deux"].end()) {
 				auto key = parsedData["status-monitor-deux"]["touch_screen"];
@@ -1235,8 +1288,10 @@ void ParseIniFile() {
 				}
 			}
 		}
+		else createDefaultFile(configIniPath);
 		
 	} else {
+		createDefaultFile(configIniPath);
 		readExternalCombo = true;
 	}
 

@@ -218,6 +218,7 @@ public:
 
     bool LoadFromFile  (const char* path);
     bool LoadFromMemory(const char* data, size_t size);
+    uint32_t GetFileHash();
 
     struct PeekInfo {
         std::string name;
@@ -245,7 +246,7 @@ public:
 
     bool Compile();
     bool Evaluate(Callback cb, void* user);
-    void Reset();
+    void Reset(bool freeze = false);
     void ClearDimsMeasureCache();
     void Free();
 

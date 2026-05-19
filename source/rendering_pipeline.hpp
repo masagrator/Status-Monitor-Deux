@@ -1,3 +1,4 @@
+#include <charconv>
 int64_t COMMON_MARGIN;
 
 class RenderingPipeline : public tsl::Gui {
@@ -10,6 +11,7 @@ private:
 	bool UseCustomExitCombo = false;
 	bool focus = true;
 	std::string name;
+	std::string rel_filepath;
 	std::string error;
 	smd::Document doc;
 	bool HeaderText = true;
@@ -32,6 +34,10 @@ private:
 	uint32_t m_base_y = 0;
 	int64_t m_anchor_offset_x = 0;
 	int64_t m_anchor_offset_y = 0;
+	// Saved screen-space top-left to restore on first frame with valid bounds.
+	// -1 means no restore pending.
+	int64_t m_saved_base_x = -1;
+	int64_t m_saved_base_y = -1;
 
 	struct TouchRect { int64_t x, y, w, h; };
 	static inline std::vector<TouchRect> s_rects{};
@@ -220,10 +226,10 @@ private:
 
 public:
     RenderingPipeline(std::string filepath) {
-		m_obj_offset_x_screen = 0;
-		m_obj_offset_y_screen = 0;
 		m_layer_pos_x_window  = 0;
 		m_layer_pos_y_window  = 0;
+		m_obj_offset_x_screen = 0;
+		m_obj_offset_y_screen = 0;
 		tsl::gfx::Renderer::getRenderer().setLayerPos(0, 0);
 		if (SaltySD) {
 			uintptr_t base = (uintptr_t)shmemGetAddr(&_sharedmemory);
@@ -251,6 +257,38 @@ public:
 			error = doc.LastError();
 			return;
 		}
+		Movable = doc.GetConfigBool("Movable", false);
+		if (Movable) {
+			uint32_t crc32 = doc.GetFileHash();
+			uint16_t saved_x_pos;
+			uint16_t saved_y_pos;
+			rel_filepath = filepath.erase(0, strlen("sdmc:/config/status-monitor-deux/modes/"));
+			bool wasSuccess = ProcessSmdSettings(rel_filepath, crc32, &saved_x_pos, &saved_y_pos);
+			if (wasSuccess == false) {
+				saved_x_pos = 0;
+				saved_y_pos = 0;
+				char buffer[10] = "";
+				auto [ptr, ec] = std::to_chars(&buffer[0], &buffer[sizeof(buffer)], crc32, 16);
+				if (ec == std::errc{}) {
+					std::string value = std::string(&buffer[0], ptr - &buffer[0]);
+					setIniFile("sdmc:/config/status-monitor-deux/config.ini", rel_filepath, "hash", value, "");
+					setIniFile("sdmc:/config/status-monitor-deux/config.ini", rel_filepath, "x", "0", "");
+					setIniFile("sdmc:/config/status-monitor-deux/config.ini", rel_filepath, "y", "0", "");
+				}
+			}
+			else if (saved_x_pos > 1280 || saved_y_pos > 720) {
+				saved_x_pos = 0;
+				saved_y_pos = 0;
+			}
+			// saved_x/y_pos is the screen-space top-left (m_base_x/y) recorded at
+			// last close. We can't decompose it into layer+obj yet because s_rects
+			// (needed for mnx/mny) don't exist until the first Evaluate. Store it
+			// and apply in handleInput on the first frame that has valid bounds.
+			m_saved_base_x = (int64_t)saved_x_pos;
+			m_saved_base_y = (int64_t)saved_y_pos;
+			if (saved_x_pos == 1280) reachedMaxX = true;
+			if (saved_y_pos == 720) reachedMaxY = true;
+		}
 		HeaderText = doc.GetConfigBool("HeaderText", true);
 		FooterText = doc.GetConfigBool("FooterText", true);
 		focus = doc.GetConfigBool("EnableControls", true);
@@ -272,7 +310,6 @@ public:
 		auto test = doc.GetConfigInt("User_BackgroundColor", 0xFFFFFF);
 		if (test == 0xFFFFFF) backgroundColor = (uint16_t)doc.GetConfigInt("BackgroundColor", 0xD000);
 		else backgroundColor = (uint16_t)test;
-		Movable = doc.GetConfigBool("Movable", false);
 		ClampToLayerRight  = doc.GetConfigBool("ClampToLayerRight",  false);
 		ClampToLayerBottom = doc.GetConfigBool("ClampToLayerBottom", false);
 		if (Movable && motionControl) {
@@ -306,6 +343,20 @@ public:
 	}
 
 	~RenderingPipeline() {
+		if (Movable) {
+			char buffer[10] = {0};
+			char buffer2[10] = {0};
+			if (reachedMaxX == true) m_base_x = 1280;
+			if (reachedMaxY == true) m_base_y = 720;
+			auto [ptr, ec] = std::to_chars(&buffer[0], &buffer[sizeof(buffer)], m_base_x, 10);
+			std::string value = buffer;
+			auto [ptr2, ec2] = std::to_chars(&buffer2[0], &buffer2[sizeof(buffer2)], m_base_y, 10);
+			std::string value2 = buffer2;
+			if (ec == std::errc{} && ec2 == std::errc{}) {
+				setIniFile("sdmc:/config/status-monitor-deux/config.ini", rel_filepath, "x", value, "");
+				setIniFile("sdmc:/config/status-monitor-deux/config.ini", rel_filepath, "y", value2, "");
+			}
+		}
 		m_obj_offset_x_screen = 0;
 		m_obj_offset_y_screen = 0;
 		tsl::gfx::Renderer::getRenderer().setLayerPos(0, 0);
@@ -336,22 +387,63 @@ public:
 				renderer->drawString(error.c_str(), false, 20, 120, 20, renderer->a(0xFFFF));
 			}
 			else {
-				if ((ClampToLayerRight || ClampToLayerBottom) && !changingPos) {
+				// A DryRun is needed when clamp flags require it, or when a
+				// saved position is pending (always the case on frame 1, since
+				// update() has already cleared s_rects before createUI runs).
+				// Run it once and use the results for both purposes.
+				bool needsDryRun = ((ClampToLayerRight || ClampToLayerBottom) && !changingPos)
+				                 || (m_saved_base_x >= 0);
+				if (needsDryRun) {
 					doc.Evaluate(DryRunCallback, renderer);
 					if (!s_rects.empty()) {
+						int64_t mnx = s_rects[0].x, mny = s_rects[0].y;
 						int64_t mxx = s_rects[0].x + s_rects[0].w;
 						int64_t mxy = s_rects[0].y + s_rects[0].h;
 						for (const auto& r : s_rects) {
+							if (r.x < mnx) mnx = r.x;
+							if (r.y < mny) mny = r.y;
 							if (r.x + r.w > mxx) mxx = r.x + r.w;
 							if (r.y + r.h > mxy) mxy = r.y + r.h;
 						}
 						int64_t layer_w = (int64_t)tsl::cfg::FramebufferWidth;
 						int64_t layer_h = (int64_t)tsl::cfg::FramebufferHeight;
+						// Apply saved position first (frame 1 restore).
+						if (m_saved_base_x >= 0) {
+							touch_pos_x    = m_saved_base_x + mnx;
+							touch_pos_y    = m_saved_base_y + mny;
+							m_anchor_offset_x = 0;
+							m_anchor_offset_y = 0;
+							// Decompose into layer + obj offset (same split as a real drag).
+							int64_t T_screen_x = touch_pos_x - mnx;
+							int64_t T_screen_y = touch_pos_y - mny;
+							int64_t T_win_x = T_screen_x * 3 / 2;
+							int64_t T_win_y = T_screen_y * 3 / 2;
+							int64_t max_x = tsl::cfg::ScreenWidth  - (int)(1.5 * tsl::cfg::FramebufferWidth);
+							int64_t max_y = tsl::cfg::ScreenHeight - (int)(1.5 * tsl::cfg::FramebufferHeight);
+							if (max_x < 0) max_x = 0;
+							if (max_y < 0) max_y = 0;
+							m_layer_pos_x_window = std::clamp<int64_t>(T_win_x, 0, max_x);
+							m_layer_pos_y_window = std::clamp<int64_t>(T_win_y, 0, max_y);
+							int64_t raw_obj_x = T_screen_x - (m_layer_pos_x_window * 2 / 3);
+							int64_t raw_obj_y = T_screen_y - (m_layer_pos_y_window * 2 / 3);
+							int64_t obj_max_x = layer_w - mxx, obj_min_x = -mnx;
+							int64_t obj_max_y = layer_h - mxy, obj_min_y = -mny;
+							m_obj_offset_x_screen = std::clamp(raw_obj_x, obj_min_x, obj_max_x >= obj_min_x ? obj_max_x : obj_min_x);
+							m_obj_offset_y_screen = std::clamp(raw_obj_y, obj_min_y, obj_max_y >= obj_min_y ? obj_max_y : obj_min_y);
+							reachedMaxX = (m_obj_offset_x_screen + mxx >= layer_w);
+							reachedMaxY = (m_obj_offset_y_screen + mxy >= layer_h);
+							tsl::gfx::Renderer::getRenderer().setLayerPos((uint32_t)m_layer_pos_x_window, (uint32_t)m_layer_pos_y_window);
+							touch_pos_x = -1;
+							touch_pos_y = -1;
+							m_saved_base_x = -1;
+							m_saved_base_y = -1;
+						}
+						// Then apply edge clamps.
 						if (ClampToLayerRight  && reachedMaxX) m_obj_offset_x_screen = layer_w - mxx;
 						if (ClampToLayerBottom && reachedMaxY) m_obj_offset_y_screen = layer_h - mxy;
 					}
 					s_rects.clear();
-					doc.Reset();
+					doc.Reset(true);
 				}
 				if (doc.Evaluate(RecordCallback, renderer) == false) {
 					error = doc.LastError();
@@ -367,7 +459,7 @@ public:
 	virtual void update() override {
 		if (error.length() != 0) return;
 		s_rects.clear();
-		doc.Reset();
+		doc.Reset(changingPos);
 		ApmPerformanceMode performanceMode;
 		if (R_SUCCEEDED(apmGetPerformanceMode(&performanceMode))) {
 			if (performanceMode == ApmPerformanceMode_Boost) SystemData.IsDocked = true;

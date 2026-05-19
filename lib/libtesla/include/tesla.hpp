@@ -2556,11 +2556,10 @@ namespace tsl {
 			// Parse Tesla settings
 			impl::parseOverlaySettings(shData->launchCombo);
 
-			padConfigureInput(1, HidNpadStyleSet_NpadStandard);
-
 			padInitializeAny(&pad);
 
-			hidInitializeTouchScreen();
+			//Doesn't work in sysmodule space, not needed anyway because other applets are always having it initialized
+			//hidInitializeTouchScreen();
 
 			// Drop all inputs from the previous overlay
 			padUpdate(&pad);
