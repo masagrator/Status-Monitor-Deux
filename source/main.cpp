@@ -13,9 +13,10 @@ HidSixAxisSensorHandle sixaxisHandles[Controller_Max];
 
 class MainMenu : public tsl::Gui {
 public:
-    std::vector<Designs> filesChecked;
+    
     const std::string root_path = "sdmc:/config/status-monitor-deux/modes/";
     std::string standard_path = root_path;
+	std::vector<Designs> filesChecked;
 
     MainMenu(std::string rel_path) {
         if (!rel_path.empty()) {
@@ -25,7 +26,25 @@ public:
     }
 
     virtual tsl::elm::Element* createUI() override {
-        rootFrame = new tsl::elm::OverlayFrame(APP_TITLE, APP_VERSION);
+
+		if (jumpImmediatelyToSingleSmd == true && filesChecked.size() == 1) {
+			if (filesChecked[0].is_directory == false && standard_path.compare(root_path) == 0) {		
+				std::string full_path = standard_path + filesChecked[0].name;
+
+				smd::Document::PeekInfo info;
+
+				if (smd::Document::Peek(full_path.c_str(), info)) {
+					std::string args = "--file " + filesChecked[0].name;
+					tsl::setNextOverlay(filepath, args);
+					tsl::Overlay::get()->close();
+					backgroundColor = 0x0000;
+					rootFrame = new tsl::elm::OverlayFrame("", "");
+					return rootFrame;
+				}
+			}
+		}
+
+		rootFrame = new tsl::elm::OverlayFrame(APP_TITLE, APP_VERSION);
         auto list = new tsl::elm::List();
 
         std::string rel_dir = "";
@@ -57,6 +76,16 @@ public:
 						if (info.name.empty() == false) {
 							if (keys & KEY_A) {
 								if (info.layerWidth != 0 && info.layerHeight != 0 && info.layerWidth != 448 && info.layerHeight != 720) {
+									smd::Document doc;
+									if (doc.LoadFromFile(full_path.c_str()) == false) {
+										tsl::changeTo<RenderingPipeline>(full_path);
+										return true;
+									}
+									BindAllPredefined(doc);
+									if (doc.Compile() == false) {
+										tsl::changeTo<RenderingPipeline>(full_path);
+										return true;
+									}
 									std::string args = "--file " + rel_dir + item.name + " --submenu";
 									tsl::setNextOverlay(filepath, args);
 									tsl::Overlay::get()->close();

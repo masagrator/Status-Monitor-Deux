@@ -112,6 +112,7 @@ struct ResolutionEntry {
 enum class RenderCmdType : uint8_t {
     Text,
     Box,
+    RoundedBox,
     EmptyBox,
     DashedLine,
     GetDimensions,
@@ -163,6 +164,7 @@ struct RenderCommand {
     uint16_t color = 0;
 
     int64_t  x2 = 0, y2 = 0, dashOn = 0, dashOff = 0;
+    float roundnessTl = 0, roundnessTr = 0, roundnessBl = 0, roundnessBr = 0;
 
     int64_t  minClamp = 0, maxClamp = 0;
     uint16_t fillColor = 0;

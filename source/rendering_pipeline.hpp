@@ -149,6 +149,10 @@ private:
 				m_renderer->drawRect(COMMON_MARGIN + cmd.x, cmd.y, cmd.width, cmd.height, m_renderer->a(cmd.color));
 				TrackRect(COMMON_MARGIN + orig_x, orig_y, cmd.width, cmd.height);
 				break;
+			case smd::RenderCmdType::RoundedBox:
+				m_renderer->drawRoundRect(COMMON_MARGIN + cmd.x, cmd.y, cmd.width, cmd.height, cmd.roundnessTl, cmd.roundnessTr, cmd.roundnessBl, cmd.roundnessBr, m_renderer->a(cmd.color));
+				TrackRect(COMMON_MARGIN + orig_x, orig_y, cmd.width, cmd.height);
+				break;
 			case smd::RenderCmdType::EmptyBox:
 				m_renderer->drawEmptyRect(COMMON_MARGIN + cmd.x, cmd.y, cmd.width, cmd.height, m_renderer->a(cmd.color));
 				TrackRect(COMMON_MARGIN + orig_x, orig_y, cmd.width, cmd.height);
@@ -188,6 +192,7 @@ private:
 				break;
 			}
 			case smd::RenderCmdType::Box:
+			case smd::RenderCmdType::RoundedBox:
 			case smd::RenderCmdType::EmptyBox:
 				TrackRect(COMMON_MARGIN + cmd.x, cmd.y, cmd.width, cmd.height);
 				break;
@@ -258,7 +263,7 @@ public:
 			return;
 		}
 		Movable = doc.GetConfigBool("Movable", false);
-		if (Movable) {
+		if (Movable && saveAndLoadMovableOverlayPosition) {
 			uint32_t crc32 = doc.GetFileHash();
 			uint16_t saved_x_pos;
 			uint16_t saved_y_pos;
@@ -343,7 +348,7 @@ public:
 	}
 
 	~RenderingPipeline() {
-		if (Movable) {
+		if (Movable && saveAndLoadMovableOverlayPosition) {
 			char buffer[10] = {0};
 			char buffer2[10] = {0};
 			if (reachedMaxX == true) m_base_x = 1280;

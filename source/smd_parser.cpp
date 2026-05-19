@@ -39,6 +39,7 @@ enum class NodeKind : uint8_t {
     For,
     Text,
     Box,
+    RoundedBox,
     EmptyBox,
     DashedLine,
     Var,
@@ -187,6 +188,9 @@ struct AstNode {
 
     // ---- Box / EmptyBox (5-arg: x, y, w, h, color; reuses eX/eY) ----
     CExpr       eWidth, eHeight, eColorBox;
+
+    // ---- RoundedBox / (9-arg: x, y, w, h, roundenssTl, roundnessTr, roundnessBl, roundnessBr, color; reuses eX/eY/eWidth/eHeight/eColorBox) ----
+    CExpr       eRoundnessTL,  eRoundnessTR,  eRoundnessBL,  eRoundnessBR;
 
     // ---- DashedLine (x, y, lineLength, dashOn, dashOff, colour) ----
     CExpr       eX2, eY2, eDashOn, eDashOff;
@@ -1587,6 +1591,20 @@ static bool ParseCommandBody(const std::string& name, const std::string& body,
         out.eWidth.source    = PreprocessExpr(args[2]);
         out.eHeight.source   = PreprocessExpr(args[3]);
         out.eColorBox.source = PreprocessExpr(args[4]);
+        return true;
+    }
+    if (name == "ROUNDED_BOX") {
+        if (args.size() != 9) { err = "ROUNDED_BOX expects 9 args\n(x, y, w, h, roundnessTl, roundnessTr, roundnessBl, roundnessBr, color)"; return false; }
+        out.kind = NodeKind::RoundedBox;
+        out.eX.source           = PreprocessExpr(args[0]);
+        out.eY.source           = PreprocessExpr(args[1]);
+        out.eWidth.source       = PreprocessExpr(args[2]);
+        out.eHeight.source      = PreprocessExpr(args[3]);
+        out.eRoundnessTL.source = PreprocessExpr(args[4]);
+        out.eRoundnessTR.source = PreprocessExpr(args[5]);
+        out.eRoundnessBL.source = PreprocessExpr(args[6]);
+        out.eRoundnessBR.source = PreprocessExpr(args[7]);
+        out.eColorBox.source    = PreprocessExpr(args[8]);
         return true;
     }
     if (name == "EMPTY_BOX") {
@@ -3014,6 +3032,12 @@ bool Document::Compile() {
                     scanCExpr(n.eWidth); scanCExpr(n.eHeight);
                     scanCExpr(n.eColorBox);
                     break;
+                case NodeKind::RoundedBox:
+                    scanCExpr(n.eX); scanCExpr(n.eY);
+                    scanCExpr(n.eWidth); scanCExpr(n.eHeight);
+                    scanCExpr(n.eRoundnessTL); scanCExpr(n.eRoundnessTR); scanCExpr(n.eRoundnessBL); scanCExpr(n.eRoundnessBR);
+                    scanCExpr(n.eColorBox);
+                    break;
                 case NodeKind::EmptyBox:
                     scanCExpr(n.eX); scanCExpr(n.eY);
                     scanCExpr(n.eWidth); scanCExpr(n.eHeight);
@@ -3426,6 +3450,17 @@ bool Document::Compile() {
                     if (!compile(n.eWidth,"BOX.w"))     return false;
                     if (!compile(n.eHeight,"BOX.h"))    return false;
                     if (!compile(n.eColorBox,"BOX.col"))return false;
+                    break;
+                case NodeKind::RoundedBox:
+                    if (!compile(n.eX,"RBOX.x"))              return false;
+                    if (!compile(n.eY,"RBOX.y"))              return false;
+                    if (!compile(n.eWidth,"RBOX.w"))          return false;
+                    if (!compile(n.eHeight,"RBOX.h"))         return false;
+                    if (!compile(n.eRoundnessTL,"RBOX.rndtl"))return false;
+                    if (!compile(n.eRoundnessTR,"RBOX.rndtr"))return false;
+                    if (!compile(n.eRoundnessBL,"RBOX.rndbl"))return false;
+                    if (!compile(n.eRoundnessBR,"RBOX.rndbr"))return false;
+                    if (!compile(n.eColorBox,"RBOX.col"))     return false;
                     break;
                 case NodeKind::EmptyBox:
                     if (!compile(n.eX,"EBOX.x"))         return false;
@@ -4403,6 +4438,21 @@ bool Document::Evaluate(Callback cb, void* user) {
                     cmd.y      = (int64_t)evalExpr(n.eY);
                     cmd.width  = (int64_t)evalExpr(n.eWidth);
                     cmd.height = (int64_t)evalExpr(n.eHeight);
+                    cmd.color  = (uint16_t)(int64_t)evalExpr(n.eColorBox);
+                    cb(cmd, user);
+                    break;
+                }
+                case NodeKind::RoundedBox: {
+                    RenderCommand cmd{};
+                    cmd.type   = RenderCmdType::RoundedBox;
+                    cmd.x      = (int64_t)evalExpr(n.eX);
+                    cmd.y      = (int64_t)evalExpr(n.eY);
+                    cmd.width  = (int64_t)evalExpr(n.eWidth);
+                    cmd.height = (int64_t)evalExpr(n.eHeight);
+                    cmd.roundnessTl = evalExpr(n.eRoundnessTL);
+                    cmd.roundnessTr = evalExpr(n.eRoundnessTR);
+                    cmd.roundnessBl = evalExpr(n.eRoundnessBL);
+                    cmd.roundnessBr = evalExpr(n.eRoundnessBR);
                     cmd.color  = (uint16_t)(int64_t)evalExpr(n.eColorBox);
                     cb(cmd, user);
                     break;
