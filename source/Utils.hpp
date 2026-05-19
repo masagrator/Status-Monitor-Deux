@@ -140,6 +140,8 @@ SharedMemory _sharedmemory = {};
 bool SharedMemoryUsed = false;
 Handle remoteSharedMemory = 1;
 bool motionControl = true;
+bool jumpImmediatelyToSingleSmd = true;
+bool saveAndLoadMovableOverlayPosition = true;
 
 //Checks
 Result clkrstCheck = 1;
@@ -188,6 +190,10 @@ struct {
 	float TotalSystemMB_float;
 	float UsedSystemUnsafeMB_float;
 	float TotalSystemUnsafeMB_float;
+	int64_t HocClkRamBWAll_int;
+	int64_t HocClkRamBWCpu_int;
+	int64_t HocClkRamBWGpu_int;
+	int64_t HocClkRamBWPeak_int;
 } RamData = {0};
 
 struct {
@@ -208,6 +214,18 @@ struct {
 	float PcbTemperatureCelsius_float;
 	int64_t SkinTemperatureMiliCelsius_int;
 	float FanRotationPercentageLevel_float;
+	int64_t HocClkThermalSensorCPU_int;
+	int64_t HocClkThermalSensorGPU_int;
+	int64_t HocClkThermalSensorMEM_int;
+	int64_t HocClkThermalSensorPLLX_int;
+	int64_t HocClkThermalSensorAO_int;
+	int64_t HocClkThermalSensorBQ24193_int;
+	int64_t HocClkVoltageSOC_int;
+	int64_t HocClkVoltageEMCVDD2_int;
+	int64_t HocClkVoltageCPU_int;
+	int64_t HocClkVoltageGPU_int;
+	int64_t HocClkVoltageEMCVDDQ_int;
+	int64_t HocClkVoltageDisplay_int;
 } BoardData = {0};
 
 struct {
@@ -265,6 +283,10 @@ inline void BindAllPredefined(smd::Document& doc) {
     doc.BindFloat ("RAM_TotalSystemMB_float",             		&RamData.TotalSystemMB_float);
     doc.BindFloat ("RAM_UsedSystemUnsafeMB_float",        		&RamData.UsedSystemUnsafeMB_float);
     doc.BindFloat ("RAM_TotalSystemUnsafeMB_float",       		&RamData.TotalSystemUnsafeMB_float);
+    doc.BindInt64 ("RAM_HocClkRamBWAll_int",                    &RamData.HocClkRamBWAll_int);
+	doc.BindInt64 ("RAM_HocClkRamBWCpu_int",                    &RamData.HocClkRamBWCpu_int);
+	doc.BindInt64 ("RAM_HocClkRamBWGpu_int",                    &RamData.HocClkRamBWGpu_int);
+	doc.BindInt64 ("RAM_HocClkRamBWPeak_int",                   &RamData.HocClkRamBWPeak_int);
     doc.BindInt64 ("Board_ChargerCurrentLimit_int",       		&BoardData.ChargerCurrentLimit_int);
     doc.BindInt64 ("Board_ChargerVoltageLimit_int",       		&BoardData.ChargerVoltageLimit_int);
     doc.BindInt64 ("Board_ChargerConnected_int",          		&BoardData.ChargerConnected_int);
@@ -282,6 +304,19 @@ inline void BindAllPredefined(smd::Document& doc) {
     doc.BindFloat ("Board_PcbTemperatureCelsius_float",   		&BoardData.PcbTemperatureCelsius_float);
     doc.BindInt64 ("Board_SkinTemperatureMiliCelsius_int", 		&BoardData.SkinTemperatureMiliCelsius_int);
     doc.BindFloat ("Board_FanRotationPercentageLevel_float",	&BoardData.FanRotationPercentageLevel_float);
+    doc.BindInt64 ("Board_HocClkThermalSensorCPU_int",	        &BoardData.HocClkThermalSensorCPU_int);
+    doc.BindInt64 ("Board_HocClkThermalSensorGPU_int",	        &BoardData.HocClkThermalSensorGPU_int);
+    doc.BindInt64 ("Board_HocClkThermalSensorMEM_int",	        &BoardData.HocClkThermalSensorMEM_int);
+    doc.BindInt64 ("Board_HocClkThermalSensorPLLX_int",	        &BoardData.HocClkThermalSensorPLLX_int);
+    doc.BindInt64 ("Board_HocClkThermalSensorAO_int",	        &BoardData.HocClkThermalSensorAO_int);
+	//BQ24193: 0 - Normal, 1 - Warm, 2 - Hot, 3 - Overheat
+    doc.BindInt64 ("Board_HocClkThermalSensorBQ24193_int",	    &BoardData.HocClkThermalSensorBQ24193_int);
+    doc.BindInt64 ("HocClkVoltageSOC_int",	                    &BoardData.HocClkVoltageSOC_int);
+    doc.BindInt64 ("HocClkVoltageCPU_int",	                    &BoardData.HocClkVoltageCPU_int);
+    doc.BindInt64 ("HocClkVoltageGPU_int",	                    &BoardData.HocClkVoltageGPU_int);
+    doc.BindInt64 ("HocClkVoltageEMCVDD2_int",	                &BoardData.HocClkVoltageEMCVDD2_int);
+    doc.BindInt64 ("HocClkVoltageEMCVDDQ_int",	                &BoardData.HocClkVoltageEMCVDDQ_int);
+	doc.BindInt64 ("HocClkVoltageDisplay_int",	                &BoardData.HocClkVoltageDisplay_int);
     doc.BindInt64 ("Game_LastFrameNumber_int",            		&GameData.LastFrameNumber_int);
     doc.BindBool  ("Game_IsGameRunning",                  		&GameData.IsGameRunning);
     doc.BindInt64 ("Game_FPS_int",                        		&GameData.FPS_int);
@@ -643,6 +678,10 @@ void RamThreadLoop(void*) {
 				RamData.LoadAll_int = hocclkCTX.stable.partLoad[HocClkPartLoad_EMC];
 				RamData.LoadCPU_int = hocclkCTX.stable.partLoad[HocClkPartLoad_EMCCpu];
 				RamData.DeltaHz_int = RamData.RealHz_int - RamData.Hz_int;
+				RamData.HocClkRamBWAll_int = hocclkCTX.stable.partLoad[HocClkPartLoad_RamBWAll];
+				RamData.HocClkRamBWCpu_int = hocclkCTX.stable.partLoad[HocClkPartLoad_RamBWCpu];
+				RamData.HocClkRamBWGpu_int = hocclkCTX.stable.partLoad[HocClkPartLoad_RamBWGpu];
+				RamData.HocClkRamBWPeak_int = hocclkCTX.stable.partLoad[HocClkPartLoad_RamBWPeak];
 			}
 		}
 
@@ -716,6 +755,20 @@ void BoardThreadLoop(void*) {
 				if (Rotation_Duty <= 0) Rotation_Duty = 0.0000001;
 				BoardData.FanRotationPercentageLevel_float = Rotation_Duty;
 			}
+		}
+		if (R_SUCCEEDED(hocclkCheck) && R_SUCCEEDED(updateExtClk())) {
+			BoardData.HocClkThermalSensorCPU_int = hocclkCTX.stable.temps[HocClkThermalSensor_CPU];
+			BoardData.HocClkThermalSensorGPU_int = hocclkCTX.stable.temps[HocClkThermalSensor_GPU];
+			BoardData.HocClkThermalSensorMEM_int = hocclkCTX.stable.temps[HocClkThermalSensor_MEM];
+			BoardData.HocClkThermalSensorPLLX_int = hocclkCTX.stable.temps[HocClkThermalSensor_PLLX];
+			BoardData.HocClkThermalSensorAO_int = hocclkCTX.stable.temps[HocClkThermalSensor_AO];
+			BoardData.HocClkThermalSensorBQ24193_int = hocclkCTX.stable.temps[HocClkThermalSensor_BQ24193];
+			BoardData.HocClkVoltageSOC_int = hocclkCTX.stable.voltages[HocClkVoltage_SOC];
+			BoardData.HocClkVoltageEMCVDD2_int = hocclkCTX.stable.voltages[HocClkVoltage_EMCVDD2];
+			BoardData.HocClkVoltageCPU_int = hocclkCTX.stable.voltages[HocClkVoltage_CPU];
+			BoardData.HocClkVoltageGPU_int = hocclkCTX.stable.voltages[HocClkVoltage_GPU];
+			BoardData.HocClkVoltageEMCVDDQ_int = hocclkCTX.stable.voltages[HocClkVoltage_EMCVDDQ];
+			BoardData.HocClkVoltageDisplay_int = hocclkCTX.stable.voltages[HocClkVoltage_Display];
 		}
 	} while (!leventWait(&threadexit, 1'000'000'000));	
 
@@ -1282,6 +1335,16 @@ void ParseIniFile() {
 					removeSpaces(proControllerMotionKeyCombo);
 					convertToUpper(proControllerMotionKeyCombo);
 				}
+			}
+			if (parsedData["status-monitor-deux"].find("jump_immediately_to_single_smd") != parsedData["status-monitor-deux"].end()) {
+				auto key = parsedData["status-monitor-deux"]["jump_immediately_to_single_smd"];
+				convertToUpper(key);
+				jumpImmediatelyToSingleSmd = key.compare("FALSE");
+			}
+			if (parsedData["status-monitor-deux"].find("save_and_load_movable_overlay_position") != parsedData["status-monitor-deux"].end()) {
+				auto key = parsedData["status-monitor-deux"]["save_and_load_movable_overlay_position"];
+				convertToUpper(key);
+				saveAndLoadMovableOverlayPosition = key.compare("FALSE");
 			}
 		}
 		else createDefaultFile(configIniPath);
