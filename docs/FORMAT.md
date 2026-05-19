@@ -533,10 +533,12 @@ Names the host fills in every frame. You read them in any expression; you cannot
 
 ### CPU
 `CPU_Hz_int`, `CPU_Core0Load_double`, `CPU_Core1Load_double`, `CPU_Core2Load_double`, `CPU_Core3Load_double`.
+
 Available only with sys-clk or hoc-clk: `CPU_RealHz_int`, `CPU_DeltaHz_int`
 
 ### GPU
 `GPU_Hz_int`, `GPU_Load_int`.
+
 Available only with sys-clk or hoc-clk: `GPU_RealHz_int`, `GPU_DeltaHz_int`
 
 ### RAM
