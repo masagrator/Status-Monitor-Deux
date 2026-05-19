@@ -120,6 +120,7 @@ uint16_t framebufferWidth = 448;
 uint16_t framebufferHeight = 720;
 bool deactivateOriginalFooter = false;
 bool fontCache = true;
+bool isChineseTraditionalOverride = false;
 
 using namespace std::literals::chrono_literals;
 
@@ -570,6 +571,71 @@ namespace tsl {
 			}
 
 			/**
+			* @brief Draws a filled rectangle with individually rounded corners
+			*
+			* @param x X pos
+			* @param y Y pos
+			* @param w Width
+			* @param h Height
+			* @param roundnessTL Top-left corner roundness (0.0 = sharp, 1.0 = maximum rounding)
+			* @param roundnessTR Top-right corner roundness (0.0 = sharp, 1.0 = maximum rounding)
+			* @param roundnessBL Bottom-left corner roundness (0.0 = sharp, 1.0 = maximum rounding)
+			* @param roundnessBR Bottom-right corner roundness (0.0 = sharp, 1.0 = maximum rounding)
+			* @param color Color
+			*/
+			inline void drawRoundRect(s16 x, s16 y, s16 w, s16 h, float roundnessTL, float roundnessTR, float roundnessBL, float roundnessBR, Color color) {
+				if (roundnessTL <= 0) roundnessTL = 0;
+				if (roundnessTR <= 0) roundnessTR = 0;
+				if (roundnessBL <= 0) roundnessBL = 0;
+				if (roundnessBR <= 0) roundnessBR = 0;
+				if (roundnessBL == 0.0 && roundnessBR == 0.0 && roundnessTR == 0.0 && roundnessTL == 0.0)
+					return drawRect(x, y, w, h, color);
+
+				if (roundnessTL > 1.0) roundnessTL = 1;
+				if (roundnessTR > 1.0) roundnessTR = 1;
+				if (roundnessBL > 1.0) roundnessBL = 1;
+				if (roundnessBR > 1.0) roundnessBR = 1;
+
+				s16 maxR = std::min(w / 2, h / 2);
+				s16 rTL = static_cast<s16>(roundnessTL * maxR);
+				s16 rTR = static_cast<s16>(roundnessTR * maxR);
+				s16 rBL = static_cast<s16>(roundnessBL * maxR);
+				s16 rBR = static_cast<s16>(roundnessBR * maxR);
+
+				for (s16 x1 = x; x1 < x + w; x1++) {
+					for (s16 y1 = y; y1 < y + h; y1++) {
+						s16 dx, dy;
+						s16 r;
+
+						if (x1 < x + rTL && y1 < y + rTL) {
+							dx = x + rTL - 1 - x1;
+							dy = y + rTL - 1 - y1;
+							r  = rTL;
+						} else if (x1 >= x + w - rTR && y1 < y + rTR) {
+							dx = x1 - (x + w - rTR);
+							dy = y + rTR - 1 - y1;
+							r  = rTR;
+						} else if (x1 < x + rBL && y1 >= y + h - rBL) {
+							dx = x + rBL - 1 - x1;
+							dy = y1 - (y + h - rBL);
+							r  = rBL;
+						} else if (x1 >= x + w - rBR && y1 >= y + h - rBR) {
+							dx = x1 - (x + w - rBR);
+							dy = y1 - (y + h - rBR);
+							r  = rBR;
+						} else {
+							this->setPixelBlendDst(x1, y1, color);
+							continue;
+						}
+
+						if (dx * dx + dy * dy <= r * r)
+							this->setPixelBlendDst(x1, y1, color);
+					}
+				}
+			}
+
+
+			/**
 			 * @brief Draws a rectangle of given sizes with empty filling
 			 * 
 			 * @param x X pos 
@@ -579,9 +645,6 @@ namespace tsl {
 			 * @param color Color
 			 */
 			inline void drawEmptyRect(s16 x, s16 y, s16 w, s16 h, Color color) {
-				if (x < 0 || y < 0 || x >= cfg::FramebufferWidth || y >= cfg::FramebufferHeight)
-					return;
-
 				for (s16 x1 = x; x1 <= (x + w); x1++)
 					for (s16 y1 = y; y1 <= (y + h); y1++)
 						if (y1 == y || x1 == x || y1 == y + h || x1 == x + w)
@@ -841,8 +904,28 @@ namespace tsl {
 
 					if (stbtt_FindGlyphIndex(&this->m_extFont, currCharacter))
 						currFont = &this->m_extFont;
-					else
+					else if (stbtt_FindGlyphIndex(&this->m_stdFont, currCharacter))
 						currFont = &this->m_stdFont;
+					else if (stbtt_FindGlyphIndex(&this->m_korFont, currCharacter))
+						currFont = &this->m_korFont;
+					else if (isChineseTraditionalOverride == true) {
+						if (stbtt_FindGlyphIndex(&this->m_twFont, currCharacter))
+							currFont = &this->m_twFont;
+						else if (stbtt_FindGlyphIndex(&this->m_extchnFont, currCharacter))
+							currFont = &this->m_extchnFont;
+						else if (stbtt_FindGlyphIndex(&this->m_chnFont, currCharacter))
+							currFont = &this->m_chnFont;
+					}
+					else {
+						if (stbtt_FindGlyphIndex(&this->m_extchnFont, currCharacter))
+							currFont = &this->m_extchnFont;	
+						else if (stbtt_FindGlyphIndex(&this->m_chnFont, currCharacter))
+							currFont = &this->m_chnFont;
+						else if (stbtt_FindGlyphIndex(&this->m_twFont, currCharacter))
+							currFont = &this->m_twFont;					
+					}
+
+					if (currFont == nullptr) currFont = &this->m_stdFont;
 
 					float currFontSize = stbtt_ScaleForPixelHeight(currFont, fontSize);
 					currX += currFontSize * stbtt_GetCodepointKernAdvance(currFont, prevCharacter, currCharacter);
@@ -912,7 +995,7 @@ namespace tsl {
 			bool m_scissoring = false;
 			u16 m_scissorBounds[4];
 
-			stbtt_fontinfo m_stdFont, m_extFont;
+			stbtt_fontinfo m_stdFont, m_chnFont, m_extchnFont, m_twFont, m_korFont, m_extFont;
 
 			static inline float s_opacity = 1.0F;
 
@@ -1078,21 +1161,44 @@ namespace tsl {
 			Result initFonts() {
 				Result res;
 
-				static PlFontData stdFontData, extFontData;
+				PlFontData FontData;
 
 				// Nintendo's default font
-				if(R_FAILED(res = plGetSharedFontByType(&stdFontData, PlSharedFontType_Standard)))
+				if(R_FAILED(res = plGetSharedFontByType(&FontData, PlSharedFontType_Standard)))
 					return res;
 
-				u8 *fontBuffer = reinterpret_cast<u8*>(stdFontData.address);
+				u8 *fontBuffer = reinterpret_cast<u8*>(FontData.address);
 				stbtt_InitFont(&this->m_stdFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
 				
-				// Nintendo's extended font containing a bunch of icons
-				if(R_FAILED(res = plGetSharedFontByType(&extFontData, PlSharedFontType_NintendoExt)))
+				if(R_FAILED(res = plGetSharedFontByType(&FontData, PlSharedFontType_NintendoExt)))
 					return res;
 
-				fontBuffer = reinterpret_cast<u8*>(extFontData.address);
+				fontBuffer = reinterpret_cast<u8*>(FontData.address);
 				stbtt_InitFont(&this->m_extFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
+
+				if(R_FAILED(res = plGetSharedFontByType(&FontData, PlSharedFontType_ChineseSimplified)))
+					return res;
+
+				fontBuffer = reinterpret_cast<u8*>(FontData.address);
+				stbtt_InitFont(&this->m_chnFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
+
+				if(R_FAILED(res = plGetSharedFontByType(&FontData, PlSharedFontType_ExtChineseSimplified)))
+					return res;
+
+				fontBuffer = reinterpret_cast<u8*>(FontData.address);
+				stbtt_InitFont(&this->m_extchnFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
+
+				if(R_FAILED(res = plGetSharedFontByType(&FontData, PlSharedFontType_ChineseTraditional)))
+					return res;
+
+				fontBuffer = reinterpret_cast<u8*>(FontData.address);
+				stbtt_InitFont(&this->m_twFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
+
+				if(R_FAILED(res = plGetSharedFontByType(&FontData, PlSharedFontType_KO)))
+					return res;
+
+				fontBuffer = reinterpret_cast<u8*>(FontData.address);
+				stbtt_InitFont(&this->m_korFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
 
 				return res;
 			}
