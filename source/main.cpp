@@ -17,8 +17,11 @@ public:
     const std::string root_path = "sdmc:/config/status-monitor-deux/modes/";
     std::string standard_path = root_path;
 	std::vector<Designs> filesChecked;
+	std::string formattedKeyCombo;
 
     MainMenu(std::string rel_path) {
+		formattedKeyCombo = keyCombo;
+		formatButtonCombination(formattedKeyCombo);
         if (!rel_path.empty()) {
             standard_path = rel_path;
         }
@@ -33,7 +36,7 @@ public:
 
 				smd::Document::PeekInfo info;
 
-				if (smd::Document::Peek(full_path.c_str(), info)) {
+				if (smd::Document::Peek(full_path.c_str(), info, overrideLanguage.c_str())) {
 					std::string args = "--file " + filesChecked[0].name;
 					tsl::setNextOverlay(filepath, args);
 					tsl::Overlay::get()->close();
@@ -44,7 +47,10 @@ public:
 			}
 		}
 
-		rootFrame = new tsl::elm::OverlayFrame(APP_TITLE, APP_VERSION);
+		std::string version = APP_VERSION;
+		version += "\n" + formattedKeyCombo;
+
+		rootFrame = new tsl::elm::OverlayFrame(APP_TITLE, version.c_str());
         auto list = new tsl::elm::List();
 
         std::string rel_dir = "";
@@ -55,10 +61,13 @@ public:
         if (!filesChecked.empty()) {
             for (const auto& item : filesChecked) {
                 if (item.is_directory) {
-                    auto folderItem = new tsl::elm::ListItem(item.name, "\uE133");
-                    folderItem->setClickListener([this, item](uint64_t keys) {
+					std::string localPath = standard_path + item.name + "/";
+					std::string localName = lookupSMF(localPath);
+					std::string name = localName.length() == 0 ? item.name : localName;
+                    auto folderItem = new tsl::elm::ListItem(name, "\uE133");
+                    folderItem->setClickListener([this, localPath](uint64_t keys) {
                         if (keys & KEY_A) {
-                            tsl::changeTo<MainMenu>(standard_path + item.name + "/");
+                            tsl::changeTo<MainMenu>(localPath);
                             return true;
                         }
                         return false;
@@ -69,7 +78,7 @@ public:
                     std::string full_path = standard_path + item.name;
                     
                     smd::Document::PeekInfo info;
-                    smd::Document::Peek(full_path.c_str(), info);
+                    smd::Document::Peek(full_path.c_str(), info, overrideLanguage.c_str());
 
                     auto fileItem = new tsl::elm::ListItem(info.name.empty() ? item.name : info.name, info.name.empty() ? "\uE098" : "");
                     fileItem->setClickListener([this, item, info, full_path, rel_dir](uint64_t keys) {
@@ -168,10 +177,41 @@ public:
 				}
 				else hocclkCheck = 0;
 			}
+			if (overrideLanguage.length() == 0) {
+				if (R_SUCCEEDED(setInitialize())) {
+					u64 languageCode;
+					setGetSystemLanguage(&languageCode);
+					SetLanguage language;
+					setMakeLanguage(languageCode, &language);
+					setExit();
+					switch(language) {
+						case SetLanguage_JA:     {overrideLanguage = "JA-JP"; break;}
+						case SetLanguage_FR:     {overrideLanguage = "FR-FR"; break;}
+						case SetLanguage_DE:     {overrideLanguage = "DE-DE"; break;}
+						case SetLanguage_IT:     {overrideLanguage = "IT-IT"; break;}
+						case SetLanguage_ES:     {overrideLanguage = "ES-ES"; break;}
+						case SetLanguage_ZHCN:
+						case SetLanguage_ZHHANS: {overrideLanguage = "ZH-CN"; break;}
+						case SetLanguage_ZHTW:
+						case SetLanguage_ZHHANT: {overrideLanguage = "ZH-TW"; break;}
+						case SetLanguage_KO:     {overrideLanguage = "KO-KR"; break;}
+						case SetLanguage_NL:     {overrideLanguage = "NL-NL"; break;}
+						case SetLanguage_PT:     {overrideLanguage = "PT-PT"; break;}
+						case SetLanguage_RU:     {overrideLanguage = "RU-RU"; break;}
+						case SetLanguage_ENGB:   {overrideLanguage = "EN-GB"; break;}
+						case SetLanguage_FRCA:   {overrideLanguage = "FR-CA"; break;}
+						case SetLanguage_ES419:  {overrideLanguage = "ES-419"; break;}
+						case SetLanguage_PTBR:   {overrideLanguage = "PT-BR"; break;}
+						default:                 {overrideLanguage = "EN-US"; break;}
+					}
+				}
+			}
 		});
 		Hinted = envIsSyscallHinted(0x6F);
 		hidGetSixAxisSensorHandles(&sixaxisHandles[Controller_ProController], 1, HidNpadIdType_No1,      HidNpadStyleTag_NpadFullKey);
 		hidGetSixAxisSensorHandles(&sixaxisHandles[Controller_JoyConL], 2, HidNpadIdType_No1,      HidNpadStyleTag_NpadJoyDual);
+		std::string tmp = lookupLocale("sdmc:/config/status-monitor-deux/locale.txt");
+		if (tmp.length() > 0) defaultButtonView = tmp;
 	}
 
 	virtual void exitServices() override {

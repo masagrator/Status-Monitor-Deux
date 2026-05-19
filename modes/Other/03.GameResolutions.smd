@@ -1,0 +1,68 @@
+Name = Game Resolutions
+NAME_LOCALE{"PL-PL", "Rozdzielczości w grze"}
+
+COMMON_MARGIN = 0
+
+User_RefreshRate = 30
+;;User_RefreshRate_Description_en = "Max FPS of rendered overlay. It won't be faster than your current refresh rate because of vsync."
+;;User_RefreshRate_DefaultValue = 30
+;;User_RefreshRate_Range = {int, 1, 60}
+User_TextColor = COLOR{0xFFFF}
+;;User_TextColor_Description_en = "Color of presented data."
+;;User_TextColor_DefaultValue = COLOR{0xFFFF}
+User_CategoryColor = COLOR{0xFFFF}
+;;User_CategoryColor_Description_en = "Color of categories."
+;;User_CategoryColor_DefaultValue = COLOR{0xFFFF}
+User_BoxColor = COLOR{0x1117}
+;;User_BoxColor_Description_en = "Color of background."
+;;User_BoxColor_DefaultValue = COLOR{0x1117}
+User_WarningColor = COLOR{0xF00F}
+;;User_WarningColor_Description_en = "Color of text when no game is running or no valid data is detected."
+;;User_WarningColor_DefaultValue = COLOR{0xF00F}
+
+WarningText = IETF{"Game is not running or it's incompatible."}
+IETF_LOCALE{WarningText, "PL-PL", "Gra jest nieuruchomiona lub niekompatybilna."}
+
+BackgroundColor = COLOR{0x0000}
+HeaderText = false
+FooterText = false
+Movable = true
+UseCustomExitCombo = true
+EnableControls = false
+ClampToLayerBottom = true
+ClampToLayerRight = true
+
+EnableGame = true
+
+LeftText1: {"1. %dx%d, %d\n", Game_ResolutionRenderCalls_int[0].width, Game_ResolutionRenderCalls_int[0].height, Game_ResolutionRenderCalls_int[0].calls}
+LeftText2: {"2. %dx%d, %d\n", Game_ResolutionRenderCalls_int[1].width, Game_ResolutionRenderCalls_int[1].height, Game_ResolutionRenderCalls_int[1].calls}
+LeftText3: {"3. %dx%d, %d\n", Game_ResolutionRenderCalls_int[2].width, Game_ResolutionRenderCalls_int[2].height, Game_ResolutionRenderCalls_int[2].calls}
+LeftText4: {"4. %dx%d, %d\n", Game_ResolutionRenderCalls_int[3].width, Game_ResolutionRenderCalls_int[3].height, Game_ResolutionRenderCalls_int[3].calls}
+LeftText5: {"5. %dx%d, %d\n", Game_ResolutionRenderCalls_int[4].width, Game_ResolutionRenderCalls_int[4].height, Game_ResolutionRenderCalls_int[4].calls}
+LeftText6: {"6. %dx%d, %d\n", Game_ResolutionRenderCalls_int[5].width, Game_ResolutionRenderCalls_int[5].height, Game_ResolutionRenderCalls_int[5].calls}
+LeftText7: {"7. %dx%d, %d\n", Game_ResolutionRenderCalls_int[6].width, Game_ResolutionRenderCalls_int[6].height, Game_ResolutionRenderCalls_int[6].calls}
+LeftText8: {"8. %dx%d, %d", Game_ResolutionRenderCalls_int[7].width, Game_ResolutionRenderCalls_int[7].height, Game_ResolutionRenderCalls_int[7].calls}
+RightText1: {"1. %dx%d, %d\n", Game_ResolutionViewportCalls_int[0].width, Game_ResolutionViewportCalls_int[0].height, Game_ResolutionViewportCalls_int[0].calls}
+RightText2: {"2. %dx%d, %d\n", Game_ResolutionViewportCalls_int[1].width, Game_ResolutionViewportCalls_int[1].height, Game_ResolutionViewportCalls_int[1].calls}
+RightText3: {"3. %dx%d, %d\n", Game_ResolutionViewportCalls_int[2].width, Game_ResolutionViewportCalls_int[2].height, Game_ResolutionViewportCalls_int[2].calls}
+RightText4: {"4. %dx%d, %d\n", Game_ResolutionViewportCalls_int[3].width, Game_ResolutionViewportCalls_int[3].height, Game_ResolutionViewportCalls_int[3].calls}
+RightText5: {"5. %dx%d, %d\n", Game_ResolutionViewportCalls_int[4].width, Game_ResolutionViewportCalls_int[4].height, Game_ResolutionViewportCalls_int[4].calls}
+RightText6: {"6. %dx%d, %d\n", Game_ResolutionViewportCalls_int[5].width, Game_ResolutionViewportCalls_int[5].height, Game_ResolutionViewportCalls_int[5].calls}
+RightText7: {"7. %dx%d, %d\n", Game_ResolutionViewportCalls_int[6].width, Game_ResolutionViewportCalls_int[6].height, Game_ResolutionViewportCalls_int[6].calls}
+RightText8: {"8. %dx%d, %d", Game_ResolutionViewportCalls_int[7].width, Game_ResolutionViewportCalls_int[7].height, Game_ResolutionViewportCalls_int[7].calls}
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Start:
+#if $Game_IsGameRunning and $Game_ResolutionRenderCalls_int[0].calls != 0xFFFF
+	BOX{0, 0, 360, 200, User_BoxColor}
+	VAR{DepthText, LeftText1 + LeftText2 + LeftText3 + LeftText4 + LeftText5 + LeftText6 + LeftText7 + LeftText8}
+	VAR{ViewportText, RightText1 + RightText2 + RightText3 + RightText4 + RightText5 + RightText6 + RightText7 + RightText8}
+	TEXT{20, 20, 20, User_CategoryColor, "Depth:"}
+	TEXT{20, 55, 18, User_TextColor, DepthText}
+	TEXT{180, 20, 20, User_CategoryColor, "Viewport:"}
+	TEXT{180, 55, 18, User_TextColor, ViewportText}
+#else
+	GET_DIMENSIONS{dimensions, 18, IETF_GET{WarningText}}
+	BOX{0, 0, dimensions.x + 4, 28, User_BoxColor}
+	TEXT{0, 20, 18, User_WarningColor, IETF_GET{WarningText}}
+#endif

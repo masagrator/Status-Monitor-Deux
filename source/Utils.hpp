@@ -142,6 +142,7 @@ Handle remoteSharedMemory = 1;
 bool motionControl = true;
 bool jumpImmediatelyToSingleSmd = true;
 bool saveAndLoadMovableOverlayPosition = true;
+std::string overrideLanguage;
 
 //Checks
 Result clkrstCheck = 1;
@@ -451,6 +452,9 @@ void BatteryChecker(void*) {
 			BoardData.ChargerConnected_int = _batteryChargeInfoFields.usb_charger_type;
 			BoardData.ChargerVoltageLimit_int = _batteryChargeInfoFields.charger_input_voltage_limit;
 			BoardData.ChargerCurrentLimit_int = _batteryChargeInfoFields.charger_input_current_limit;
+			BoardData.BatteryTemperatureCelcius_float = (float)_batteryChargeInfoFields.temperature_celcius / 1000.0;
+			BoardData.BatteryChargePercentage_float = (float)_batteryChargeInfoFields.battery_charge_percentage / 1000.0;
+			BoardData.BatteryAgePercentage_float = (float)_batteryChargeInfoFields.battery_age_percentage / 1000.0;
 		}
 
 		// Calculation is based on Hekate's max17050.c
@@ -1346,6 +1350,19 @@ void ParseIniFile() {
 				convertToUpper(key);
 				saveAndLoadMovableOverlayPosition = key.compare("FALSE");
 			}
+			if (parsedData["status-monitor-deux"].find("override_language") != parsedData["status-monitor-deux"].end()) {
+				auto key = parsedData["status-monitor-deux"]["override_language"];
+				convertToUpper(key);
+				bool override_check = !key.compare("TRUE");
+				if (override_check) {
+					if (parsedData["status-monitor-deux"].find("override_language_ietf_code") != parsedData["status-monitor-deux"].end()) {
+						overrideLanguage = parsedData["status-monitor-deux"]["override_language_ietf_code"];
+						convertToUpper(overrideLanguage);
+						if (overrideLanguage.compare("ZH-TW") == 0) isChineseTraditionalOverride = true;
+					}
+				}
+				
+			}
 		}
 		else createDefaultFile(configIniPath);
 		
@@ -1445,4 +1462,67 @@ void find_smd_files(const std::string& base_path, std::vector<Designs>& filesChe
         }
     }
     closedir(dir);
+}
+
+static std::string resolveHexEscapes(const std::string& s) {
+    std::string result;
+    for (size_t i = 0; i < s.size(); ++i) {
+        if (s[i] == '\\' && i + 3 <= s.size() && s[i + 1] == 'x' &&
+            std::isxdigit(static_cast<unsigned char>(s[i + 2])) &&
+            std::isxdigit(static_cast<unsigned char>(s[i + 3]))) {
+            result += static_cast<char>(std::stoul(s.substr(i + 2, 2), nullptr, 16));
+            i += 3;
+        } else {
+            result += s[i];
+        }
+    }
+    return result;
+}
+
+static std::string readLine(FILE* f) {
+    std::string line;
+    int c;
+    while ((c = fgetc(f)) != EOF && c != '\n')
+        line += static_cast<char>(c);
+    return resolveHexEscapes(line);
+}
+
+std::string lookupLocale(const std::string& path) {
+	std::string searchKey = "EN-US";
+	if (overrideLanguage.length() != 0) searchKey = overrideLanguage;
+	FILE* f = fopen(path.c_str(), "r");
+    if (!f)
+        return "";
+
+    std::string firstLine = trim(readLine(f));
+
+    std::string line;
+    while (true) {
+        line = readLine(f);
+        if (feof(f) && line.empty())
+            break;
+
+        size_t commaPos = line.find(',');
+        if (commaPos != std::string::npos) {
+            if (trim(line.substr(0, commaPos)) == searchKey) {
+                fclose(f);
+                return trim(line.substr(commaPos + 1));
+            }
+        }
+
+        if (feof(f))
+            break;
+    }
+
+    fclose(f);
+    return firstLine;
+}
+
+std::string lookupSMF(const std::string& folderPath) {
+    std::string path = folderPath;
+    if (!path.empty() && path.back() != '/') {
+        path += '/';
+	}
+
+	return lookupLocale(path + "_folder.smf");
 }

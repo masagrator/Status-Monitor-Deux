@@ -1,0 +1,123 @@
+Name = Battery/Charger
+NAME_LOCALE{"PL-PL", "Ładowarka/Bateria"}
+
+Text01Format = IETF{"Battery Actual Capacity: %.0f mAh\n"}
+Text02Format = IETF{"Battery Designed Capacity: %.0f mAh\n"}
+Text03Format = IETF{"Battery Temperature: %.1f°C\n"}
+Text04Format = IETF{"Battery Raw Charge: %.1f%%\n"}
+Text05Format = IETF{"Battery Age: %.1f%%\n"}
+Text06Format = IETF{"Battery Voltage (%ds AVG): %.0f mV\n"}
+Text07Format = IETF{"Battery Current Flow (%ss AVG): %+.0f mA\n"}
+Text08Format = IETF{"Battery Power Flow%s: %+.3f W\n"}
+Text09Format = IETF{"Battery Remaining Time: %s\n"}
+Text10Format = IETF{"Charger Type: %u\n"}
+Text11Format = IETF{"Charger Max Voltage: %u mV\n"}
+Text12Format = IETF{"Charger Max Current: %u mA\n"}
+Avg5s        = IETF{" (5s AVG)"}
+Title        = IETF{"Battery/Charger Stats:"}
+
+IETF_LOCALE{Text01Format, "PL-PL", "Aktualna pojemność baterii: %.0f mAh\n"}
+IETF_LOCALE{Text02Format, "PL-PL", "Zadeklarowana pojemność baterii: %.0f mAh\n"}
+IETF_LOCALE{Text03Format, "PL-PL", "Temperatura baterii: %.1f°C\n"}
+IETF_LOCALE{Text04Format, "PL-PL", "Obecny poziom naładowania baterii: %.1f%%\n"}
+IETF_LOCALE{Text05Format, "PL-PL", "Ostatni pomiar pełnego naładowania: %.1f%%\n"}
+IETF_LOCALE{Text06Format, "PL-PL", "Napięcie baterii (śr. z %ds): %.0f mV\n"}
+IETF_LOCALE{Text07Format, "PL-PL", "Przepływ prądu w baterii (śr. z %ss): %+.0f mA\n"}
+IETF_LOCALE{Text08Format, "PL-PL", "Przepływ mocy w baterii%s: %+.3f W\n"}
+IETF_LOCALE{Text09Format, "PL-PL", "Pozostały czas pracy na baterii: %s\n"}
+IETF_LOCALE{Text10Format, "PL-PL", "Typ ładowarki: %u\n"}
+IETF_LOCALE{Text11Format, "PL-PL", "Maksymalne napięcie ładowarki: %u mV\n"}
+IETF_LOCALE{Text12Format, "PL-PL", "Maksymalne natężenie ładowarki: %u mV\n"}
+IETF_LOCALE{Avg5s,        "PL-PL", " (śr. z 5s)"}
+IETF_LOCALE{Title,        "PL-PL", "Dane o baterii i ładowarce:"}
+
+EnableBoard = true ; powerConsumption_float, batTimeEstimateInMinutes_int, SOC_temperature_float, PCB_temperature_float, skin_temperaturemiliC_int, Rotation_Duty_float, actualFullBatCapacity_float, designedFullBatCapacity_float, temperature_celcius_float, battery_charge_percentage_float, battery_age_percentage_float, batVoltageAvg_float, batCurrentAvg_float, isBatteryFiltered, ChargerConnected_int, ChargerVoltageLimit_int, ChargerCurrentLimit_int 
+Text1: {IETF_GET{Text01Format}, Board_ActualFullBatteryCapacity_float}
+Text2: {IETF_GET{Text02Format}, Board_DesignedFullBatteryCapacity_float}
+Text3: {IETF_GET{Text03Format}, Board_BatteryTemperatureCelcius_float}
+Text4: {IETF_GET{Text04Format}, Board_BatteryChargePercentage_float}
+Text5: {IETF_GET{Text05Format}, Board_BatteryAgePercentage_float}
+Text6: {IETF_GET{Text06Format}, Board_IsBatteryFiltered ? 45 : 5, Board_BatteryVoltageAvg_float}
+Text7: {IETF_GET{Text07Format}, Board_IsBatteryFiltered ? "11.25" : "5", Board_BatteryCurrentAvg_float}
+Text8: {IETF_GET{Text08Format}, Board_IsBatteryFiltered ? "" : IETF_GET{Avg5s}, Board_PowerConsumption_float}
+Text9: {IETF_GET{Text09Format}, Board_BatteryTimeEstimateInMinutes_int >= 0 ? {"%d:%02d", Board_BatteryTimeEstimateInMinutes_int / 60, Board_BatteryTimeEstimateInMinutes_int % 60} : "-:--"}
+Text10: {IETF_GET{Text10Format}, Board_ChargerConnected_int}
+Text11: {IETF_GET{Text11Format}, Board_ChargerVoltageLimit_int}
+Text12: {IETF_GET{Text12Format}, Board_ChargerCurrentLimit_int}
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Start:
+GET_DIMENSIONS{dimensions, 18, Text1}
+VAR{MAX_HEIGHT, dimensions.y}
+GET_DIMENSIONS{dimensions, 18, Text2}
+#if dimensions.y > MAX_HEIGHT
+	VAR{MAX_HEIGHT, dimensions.y}
+#endif
+GET_DIMENSIONS{dimensions, 18, Text3}
+#if dimensions.y > MAX_HEIGHT
+	VAR{MAX_HEIGHT, dimensions.y}
+#endif
+GET_DIMENSIONS{dimensions, 18, Text4}
+#if dimensions.y > MAX_HEIGHT
+	VAR{MAX_HEIGHT, dimensions.y}
+#endif
+GET_DIMENSIONS{dimensions, 18, Text5}
+#if dimensions.y > MAX_HEIGHT
+	VAR{MAX_HEIGHT, dimensions.y}
+#endif
+GET_DIMENSIONS{dimensions, 18, Text6}
+#if dimensions.y > MAX_HEIGHT
+	VAR{MAX_HEIGHT, dimensions.y}
+#endif
+GET_DIMENSIONS{dimensions, 18, Text7}
+#if dimensions.y > MAX_HEIGHT
+	VAR{MAX_HEIGHT, dimensions.y}
+#endif
+GET_DIMENSIONS{dimensions, 18, Text8}
+#if dimensions.y > MAX_HEIGHT
+	VAR{MAX_HEIGHT, dimensions.y}
+#endif
+GET_DIMENSIONS{dimensions, 18, Text9}
+#if dimensions.y > MAX_HEIGHT
+	VAR{MAX_HEIGHT, dimensions.y}
+#endif
+GET_DIMENSIONS{dimensions, 18, Text10}
+#if dimensions.y > MAX_HEIGHT
+	VAR{MAX_HEIGHT, dimensions.y}
+#endif
+GET_DIMENSIONS{dimensions, 18, Text11}
+#if dimensions.y > MAX_HEIGHT
+	VAR{MAX_HEIGHT, dimensions.y}
+#endif
+GET_DIMENSIONS{dimensions, 18, Text12}
+#if dimensions.y > MAX_HEIGHT
+	VAR{MAX_HEIGHT, dimensions.y}
+#endif
+VAR{MAX_HEIGHT, MAX_HEIGHT + 3}
+TEXT{0, 120, 20, 0xFFFF, IETF_GET{Title}}
+VAR{Y_OFFSET, 155}
+TEXT{0, Y_OFFSET, 18, 0xFFFF, Text1}
+VAR{Y_OFFSET, Y_OFFSET + MAX_HEIGHT}
+TEXT{0, Y_OFFSET, 18, 0xFFFF, Text2}
+VAR{Y_OFFSET, Y_OFFSET + MAX_HEIGHT}
+TEXT{0, Y_OFFSET, 18, 0xFFFF, Text3}
+VAR{Y_OFFSET, Y_OFFSET + MAX_HEIGHT}
+TEXT{0, Y_OFFSET, 18, 0xFFFF, Text4}
+VAR{Y_OFFSET, Y_OFFSET + MAX_HEIGHT}
+TEXT{0, Y_OFFSET, 18, 0xFFFF, Text5}
+VAR{Y_OFFSET, Y_OFFSET + MAX_HEIGHT}
+TEXT{0, Y_OFFSET, 18, 0xFFFF, Text6}
+VAR{Y_OFFSET, Y_OFFSET + MAX_HEIGHT}
+TEXT{0, Y_OFFSET, 18, 0xFFFF, Text7}
+VAR{Y_OFFSET, Y_OFFSET + MAX_HEIGHT}
+TEXT{0, Y_OFFSET, 18, 0xFFFF, Text8}
+VAR{Y_OFFSET, Y_OFFSET + MAX_HEIGHT}
+TEXT{0, Y_OFFSET, 18, 0xFFFF, Text9}
+VAR{Y_OFFSET, Y_OFFSET + MAX_HEIGHT}
+#if $Board_ChargerConnected_int
+	TEXT{0, Y_OFFSET, 18, 0xFFFF, Text10}
+	VAR{Y_OFFSET, Y_OFFSET + MAX_HEIGHT}
+	TEXT{0, Y_OFFSET, 18, 0xFFFF, Text11}
+	VAR{Y_OFFSET, Y_OFFSET + MAX_HEIGHT}
+	TEXT{0, Y_OFFSET, 18, 0xFFFF, Text12}
+#endif

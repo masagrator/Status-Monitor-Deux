@@ -121,6 +121,7 @@ uint16_t framebufferHeight = 720;
 bool deactivateOriginalFooter = false;
 bool fontCache = true;
 bool isChineseTraditionalOverride = false;
+std::string defaultButtonView = "\uE0E1  Back     \uE0E0  OK";
 
 using namespace std::literals::chrono_literals;
 
@@ -1604,7 +1605,7 @@ namespace tsl {
 					this->m_contentElement->frame(renderer);
 
 				if (FullMode == true) renderer->drawRect(15, 720 - 73, tsl::cfg::FramebufferWidth - 30, 1, a(defaultTextColor));
-				if (!deactivateOriginalFooter) renderer->drawString("\uE0E1  Back     \uE0E0  OK", false, 30, 693, 23, a(defaultTextColor));
+				if (!deactivateOriginalFooter) renderer->drawString(defaultButtonView.c_str(), false, 30, 693, 23, a(defaultTextColor));
 			}
 
 			virtual void layout(u16 parentX, u16 parentY, u16 parentWidth, u16 parentHeight) override {

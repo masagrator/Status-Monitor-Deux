@@ -1,0 +1,282 @@
+Name = Full
+NAME_LOCALE{"PL-PL", "Pełny"}
+
+User_RefreshRate = 1
+;;User_RefreshRate_Description_en = "Max FPS of rendered overlay. It won't be faster than your current refresh rate because of vsync."
+;;User_RefreshRate_DefaultValue = 1
+;;User_RefreshRate_Range = {int, 1, 60}
+User_ShowRealFrequencies = true
+;;User_ShowRealFrequencies_Description_en = "Show real frequencies for CPU, GPU and RAM. Shows up only when hoc-clk or sys-clk is detected running."
+;;User_ShowRealFrequencies_DefaultValue = true
+User_ShowTargetFrequencies = true
+;;User_ShowTargetFrequencies_Description_en = "Show target frequencies for CPU, GPU and RAM."
+;;User_ShowTargetFrequencies_DefaultValue = true
+User_ShowFrequenceDeltas = true
+;;User_ShowFrequenceDeltas_Description_en = "Show difference between real frequency and target frequency. Shows up only when hoc-clk or sys-clk is detected running."
+;;User_ShowFrequenceDeltas_DefaultValue = true
+User_ShowFPS = true
+;;User_ShowFPS_Description_en = "Shows FPS value when game runs. Shows up only when SaltyNX is detected running."
+;;User_ShowFPS_DefaultValue = true
+User_ShowResolution = true
+;;User_ShowResolution_Description_en = "Shows two most likely candidates for rendering resolution of currently running game. Shows up only when SaltyNX is detected running."
+;;User_ShowResolution_DefaultValue = true
+User_ShowReadSpeed = true
+;;User_ShowReadSpeed_Description_en = "Shows game's read speed in MiB/s. Shows up only when SaltyNX is detected running."
+;;User_ShowReadSpeed_DefaultValue = true
+User_OldFpsAverage = false
+;;User_OldFpsAverage_Description_en = "Don't clamp FPS if they are in close range of PFPS value."
+;;User_ShowReadSpeed_DefaultValue = false
+
+ComboButtonFormat = IETF{"Hold %s to Exit"}
+IETF_LOCALE{ComboButtonFormat, "PL-PL", "Przytrzymaj %s by wyjść"}
+ComboButtonFooter = {IETF_GET{ComboButtonFormat}, formattedKeyCombo}
+
+UseCustomExitCombo = true
+EnableControls = false
+
+TargetFreqTextFormat      = IETF{"Target Frequency: %u.%u MHz"}
+RealFreqTextFormat        = IETF{"Real Frequency: %u.%u MHz"}
+CPULoadTextFormat         = IETF{"Core #0: %.2lf%%\nCore #1: %.2lf%%\nCore #2: %.2lf%%\nCore #3: %.2lf%%"}
+GPULoadTextFormat         = IETF{"Load: %u.%u%%"}
+RAMLoadTextFormat         = IETF{"Load: %u.%u%% (CPU %u.%u | GPU %u.%u)"}
+RAMUsageBaseTextFormat    = IETF{"Total: \nApplication: \nApplet: \nSystem: \nSystem Unsafe: "}
+BatteryChargingTextFormat = IETF{"Battery Power Flow: %+.2fW[%s]"}
+FanRotationTextFormat     = IETF{"Fan Rotation Level: %2.1f%%"}
+FpsNDText                 = IETF{"PFPS: n/d; FPS: n/d"}
+ReadSpeedTextFormat       = IETF{"Read speed: %.2f MiB/s"}
+ReadSpeedUnkTextFormat    = IETF{"Read speed: n/d"}
+CpuUsageText              = IETF{"CPU Usage:"}
+GpuUsageText              = IETF{"GPU Usage:"}
+RamUsageText              = IETF{"RAM Usage:"}
+BoardUsageText            = IETF{"Board:"}
+TemperatureText           = IETF{"Temperatures:"}
+ThermalSensorsText        = IETF{"SOC \nPCB \nSkin "}
+GameText                  = IETF{"Game:"}
+Resolutions1Text          = IETF{"Resolutions: %dx%d"}
+Resolutions2Text          = IETF{"Resolutions: %dx%d || %dx%d"}
+
+IETF_LOCALE{TargetFreqTextFormat,      "PL-PL", "Docelowe taktowanie: %u.%u MHz"}
+IETF_LOCALE{RealFreqTextFormat,        "PL-PL", "Rzeczywiste taktowanie: %u.%u MHz"}
+IETF_LOCALE{CPULoadTextFormat,         "PL-PL", "Rdzeń #0: %.2lf%%\nRdzeń #1: %.2lf%%\nRdzeń #2: %.2lf%%\nRdzeń #3: %.2lf%%"}
+IETF_LOCALE{GPULoadTextFormat,         "PL-PL", "Obciążenie: %u.%u%%"}
+IETF_LOCALE{RAMLoadTextFormat,         "PL-PL", "Obciążenie: %u.%u%% (CPU %u.%u | GPU %u.%u)"}
+IETF_LOCALE{RAMUsageBaseTextFormat,    "PL-PL", "Całość: \nAplikacja: \nApplet: \nSystem: \nPamięć niechroniona: "}
+IETF_LOCALE{BatteryChargingTextFormat, "PL-PL", "Przepływ prądu w baterii: %+.2fW[%s]"}
+IETF_LOCALE{FanRotationTextFormat,     "PL-PL", "Poziom obrotów wentylatora: %2.1f%%"}
+IETF_LOCALE{FpsNDText,                 "PL-PL", "PFPS: b/d; FPS: b/d"}
+IETF_LOCALE{ReadSpeedTextFormat,       "PL-PL", "Prędkość odczytu: %.2f MiB/s"}
+IETF_LOCALE{ReadSpeedUnkTextFormat,    "PL-PL", "Prędkość odczytu: b/d"}
+IETF_LOCALE{CpuUsageText,              "PL-PL", "Użycie CPU:"}
+IETF_LOCALE{GpuUsageText,              "PL-PL", "Użycie GPU:"}
+IETF_LOCALE{RamUsageText,              "PL-PL", "Użycie RAM:"}
+IETF_LOCALE{BoardUsageText,            "PL-PL", "Osprzęt"}
+IETF_LOCALE{TemperatureText,           "PL-PL", "Temperatury: "}
+IETF_LOCALE{ThermalSensorsText,        "PL-PL", "SOC \nPCB \nObudowa "}
+IETF_LOCALE{GameText,                  "PL-PL", "Gra:"}
+IETF_LOCALE{Resolutions1Text,          "PL-PL", "Rozdzielczości: %dx%d"}
+IETF_LOCALE{Resolutions2Text,          "PL-PL", "Rozdzielczości: %dx%d || %dx%d"}
+
+; CPU works only if clkrst or pcv was correctly initialized, realCPU_Hz_int is always 0 when hoc:clk or sys:clk is not detected
+EnableCPU = true
+CPUTargetFreqText: {IETF_GET{TargetFreqTextFormat}, CPU_Hz_int / 1000000, (CPU_Hz_int / 100000) % 10}
+CPURealFreqText: {IETF_GET{RealFreqTextFormat}, CPU_RealHz_int / 1000000, (CPU_RealHz_int / 100000) % 10}
+CPUdeltaText: {"Δ %d.%u", CPU_DeltaHz_int / 1000000, abs(CPU_DeltaHz_int / 100000) % 10}
+CPUloadText: {IETF_GET{CPULoadTextFormat}, CPU_Core0Load_double, CPU_Core1Load_double, CPU_Core2Load_double, CPU_Core3Load_double}
+
+; GPU works only if nv + "clkrst or pcv" was correctly initialized, realGPU_Hz_int is always 0 when hoc:clk or sys:clk is not detected
+EnableGPU = true
+GPUTargetFreqText: {IETF_GET{TargetFreqTextFormat}, GPU_Hz_int / 1000000, (GPU_Hz_int / 100000) % 10}
+GPURealFreqText: {IETF_GET{RealFreqTextFormat}, GPU_RealHz_int / 1000000, (GPU_RealHz_int / 100000) % 10}
+GPUdeltaText: {"Δ %d.%u", GPU_DeltaHz_int / 1000000, abs(GPU_DeltaHz_int / 100000) % 10}
+GPUloadText: {IETF_GET{GPULoadTextFormat}, GPU_Load_int / 10, GPU_Load_int % 10}
+
+; RAM works only if clkrst or pcv was correctly initialized + sysmodule correctly reports that SVC 0x6F is available
+; loadRAM_All_int, LoadRAM_CPU_int are always 0 when hoc:clk or sys:clk is not detected
+EnableRAM = true
+RAMTargetFreqText: {IETF_GET{TargetFreqTextFormat}, RAM_Hz_int / 1000000, (RAM_Hz_int / 100000) % 10}
+RAMRealFreqText: {IETF_GET{RealFreqTextFormat}, RAM_RealHz_int / 1000000, (RAM_RealHz_int / 100000) % 10}
+RAMdeltaText: {"Δ %d.%u", RAM_DeltaHz_int / 1000000, abs(RAM_DeltaHz_int / 100000) % 10}
+RAMloadText: {IETF_GET{RAMLoadTextFormat}, RAM_LoadAll_int / 10, RAM_LoadAll_int % 10, RAM_LoadCPU_int / 10, RAM_LoadCPU_int % 10, (RAM_LoadAll_int - RAM_LoadCPU_int) / 10, (RAM_LoadAll_int - RAM_LoadCPU_int) % 10}
+RAMusageBaseText = IETF_GET{RAMUsageBaseTextFormat}
+RAMusageText: {"%4.2f / %4.2f MB\n%4.2f / %4.2f MB\n%4.2f / %4.2f MB\n%4.2f / %4.2f MB\n%4.2f / %4.2f MB", RAM_UsedAllMB_float, RAM_TotalAllMB_float, RAM_UsedApplicationMB_float, RAM_TotalApplicationMB_float, RAM_UsedAppletMB_float, RAM_TotalAppletMB_float, RAM_UsedSystemMB_float, RAM_TotalSystemMB_float, RAM_UsedSystemUnsafeMB_float, RAM_TotalSystemUnsafeMB_float}
+
+; Board works only if at least one from i2c, tc, pwm was correctly initialized
+EnableBoard = true
+BatteryChargingText: {IETF_GET{BatteryChargingTextFormat}, Board_PowerConsumption_float, {Board_BatteryTimeEstimateInMinutes_int >= 0 ? {"%d:%02d", Board_BatteryTimeEstimateInMinutes_int / 60, Board_BatteryTimeEstimateInMinutes_int % 60} : "-:--"}}
+TemperatureText: {"%2.1f°C\n%2.1f°C\n%d.%d°C", Board_SocTemperatureCelsius_float, Board_PcbTemperatureCelsius_float, Board_SkinTemperatureMiliCelsius_int / 1000, (Board_SkinTemperatureMiliCelsius_int / 100) % 10}
+RotationText: {IETF_GET{FanRotationTextFormat}, Board_FanRotationPercentageLevel_float}
+
+;Game works only if SaltyNX was correctly initialized
+EnableGame = true
+FpsText: {"PFPS: %u; FPS: %2.1f", Game_FPS_int, User_OldFpsAverage ? Game_FpsAvgOld_float : Game_FpsAvg_float}
+FpsNoDataText = IETF_GET{FpsNDText}
+ReadSpeedText: {IETF_GET{ReadSpeedTextTextFormat}, Game_ReadSpeedPerSecond_float / 1048576}
+ReadSpeedUnkText = IETF_GET{ReadSpeedUnkTextFormat}
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Start:
+;CPU
+#if $EnableCPU
+	TEXT{0, 120, 20, 0xFFFF, IETF_GET{CpuUsageText}}
+	VAR{height_offset, 155}
+	
+	#if $CPU_RealHz_int and $User_ShowRealFrequencies
+		VAR{height_offset, 162}
+	#endif
+	
+	#if $User_ShowRealFrequencies
+		TEXT{0, height_offset, 15, 0xFFFF, CPUTargetFreqText}
+	#endif
+
+	#if $CPU_RealHz_int
+		#if $User_ShowRealFrequencies
+			TEXT{0, height_offset - 15, 15, 0xFFFF, CPURealFreqText}
+			#if $User_ShowFrequenceDeltas
+				#if $User_ShowRealFrequencies
+					TEXT{230, height_offset - 7, 15, 0xFFFF, CPUdeltaText}
+				#else
+					TEXT{230, height_offset - 15, 15, 0xFFFF, CPUdeltaText}
+				#endif
+			#endif
+		#elif $User_ShowFrequenceDeltas
+			#if $User_ShowRealFrequencies or $User_ShowTargetFrequencies
+				TEXT{230, height_offset, 15, 0xFFFF, CPUdeltaText}
+			#endif
+		#endif
+	#endif
+	TEXT{0, height_offset + 30, 15, 0xFFFF, CPUloadText}
+#endif
+
+;GPU
+#if $EnableGPU
+	VAR{height_offset, 320}
+	#if $GPU_RealHz_int and $User_ShowRealFrequencies
+		VAR{height_offset, 327}
+	#endif
+
+	TEXT{0, 285, 20, 0xFFFF, IETF_GET{GpuUsageText}}
+	#if $User_ShowRealFrequencies
+		TEXT{0, height_offset, 15, 0xFFFF, GPUTargetFreqText}
+	#endif
+	#if $GPU_RealHz_int
+		#if $User_ShowRealFrequencies
+			TEXT{0, height_offset - 15, 15, 0xFFFF, GPURealFreqText}
+			#if $User_ShowFrequenceDeltas
+				#if $User_ShowRealFrequencies
+					TEXT{230, height_offset - 7, 15, 0xFFFF, GPUdeltaText}
+				#else
+					TEXT{230, height_offset - 15, 15, 0xFFFF, GPUdeltaText}
+				#endif
+			#endif
+		#elif $User_ShowFrequenceDeltas
+			#if $User_ShowRealFrequencies or $User_ShowRealFrequencies
+				TEXT{230, height_offset, 15, 0xFFFF, GPUdeltaText}
+			#endif
+		#endif
+	#endif
+	TEXT{0, height_offset + 15, 15, 0xFFFF, GPUloadText}
+#endif
+
+;RAM
+#if $EnableRAM
+
+	VAR{height_offset, 410}
+	#if $RAM_RealHz_int and $User_ShowRealFrequencies
+		VAR{height_offset, height_offset + 7}
+	#endif
+
+	TEXT{0, 375, 20, 0xFFFF, IETF_GET{RamUsageText}}
+
+	#if $User_ShowRealFrequencies
+		TEXT{0, height_offset, 15, 0xFFFF, RAMTargetFreqText}
+	#endif
+
+	#if $RAM_RealHz_int
+		#if $User_ShowRealFrequencies
+			TEXT{0, height_offset - 15, 15, 0xFFFF, RAMRealFreqText}
+			#if $User_ShowFrequenceDeltas
+				#if $User_ShowRealFrequencies
+					TEXT{230, height_offset - 7, 15, 0xFFFF, RAMdeltaText}
+				#else
+					TEXT{230, height_offset - 15, 15, 0xFFFF, RAMdeltaText}
+				#endif
+			#endif
+		#elif $User_ShowFrequenceDeltas
+			#if $User_ShowRealFrequencies or $User_ShowRealFrequencies
+				TEXT{230, height_offset, 15, 0xFFFF, RAMdeltaText}
+			#endif
+		#endif
+		#if $RAM_LoadAll_int
+			TEXT{0, height_offset+15, 15, 0xFFFF, RAMloadText}
+		#endif
+	#endif
+	GET_DIMENSIONS{dimensions, 15, RAMusageBaseText}
+	TEXT{0, height_offset + 40, 15, 0xFFFF, RAMusageBaseText}
+	TEXT{dimensions.x, height_offset + 40, 15, 0xFFFF, RAMusageText}
+#endif
+
+;Board
+#if $EnableBoard
+	TEXT{0, 550, 20, 0xFFFF, IETF_GET{BoardUsageText}}
+	TEXT{0, 575, 15, 0xFFFF, BatteryChargingText}
+	VAR{TemperText, IETF_GET{TemperatureText}}
+	VAR{SensorsText, IETF_GET{ThermalSensorsText}}
+	GET_DIMENSIONS{dimensions1, 15, TemperText}
+	GET_DIMENSIONS{dimensions2, 15, SensorsText}
+	TEXT{0, 590, 15, 0xFFFF, TemperText}
+	TEXT{dimensions1.x, 590, 15, 0xFFFF, SensorsText}
+	TEXT{dimensions1.x + dimensions2.x, 590, 15, 0xFFFF, TemperatureText}
+	TEXT{0, 635, 15, 0xFFFF, RotationText}
+#endif
+
+#if $EnableGame
+	#if $Game_IsGameRunning
+		VAR{width_offset, 150}
+		#if $User_ShowFPS or $User_ShowResolution or $User_ShowReadSpeed
+			TEXT{width_offset, 185, 20, 0xFFFF, IETF_GET{GameText}}
+		#endif
+		VAR{height_offset, 210}
+		#if $User_ShowFPS 
+			TEXT{width_offset, height_offset, 15, 0xFFFF, FpsText}
+			VAR{height_offset, height_offset + 15}
+		#endif
+		#if $User_ShowResolution and $Game_ResolutionRenderCalls_int[0].calls != 0xFFFF
+			#if $Game_ResolutionRenderCalls_int[0].calls > $Game_ResolutionViewportCalls_int[0].calls
+				VAR{resolutionOutput0, Game_ResolutionRenderCalls_int[0]}
+				#if $Game_ResolutionRenderCalls_int[1].calls > $Game_ResolutionViewportCalls_int[0].calls
+					VAR{resolutionOutput1, Game_ResolutionRenderCalls_int[1]}
+				#else
+					VAR{resolutionOutput1, Game_ResolutionViewportCalls_int[1]}
+				#endif
+			#else
+				VAR{resolutionOutput0, Game_ResolutionViewportCalls_int[0]}
+				#if $Game_ResolutionViewportCalls_int[1].calls < $Game_ResolutionRenderCalls_int[0].calls
+					VAR{resolutionOutput1, Game_ResolutionRenderCalls_int[1]}
+				#else
+					VAR{resolutionOutput1, Game_ResolutionViewportCalls_int[1]}
+				#endif
+			#endif
+			VAR{ResolutionsText, {IETF_GET{Resolutions1Text}, resolutionOutput0.width, resolutionOutput0.height}}
+			VAR{ResolutionsBackText, {IETF_GET{Resolutions1Text}, resolutionOutput1.width, resolutionOutput1.height}}
+			VAR{ResolutionsTwoText, {IETF_GET{Resolutions2Text}, resolutionOutput0.width, resolutionOutput0.height, resolutionOutput1.width, resolutionOutput1.height}}
+			#if $resolutionOutput0.width == 0 or $resolutionOutput1.width == 0
+				#if $resolutionOutput0.width > 0
+					TEXT{width_offset, height_offset, 15, 0xFFFF, ResolutionsText}
+				#else
+					TEXT{width_offset, height_offset, 15, 0xFFFF, ResolutionsBackText}
+				#endif
+			#endif
+			#if $resolutionOutput0.width > 0 and $resolutionOutput1.width > 0
+				TEXT{width_offset, height_offset, 15, 0xFFFF, ResolutionsTwoText}
+			#endif
+			VAR{height_offset, height_offset + 15}
+		#endif
+		#if $User_ShowReadSpeed
+			#if $Game_ReadSpeedPerSecond_float
+				TEXT{width_offset, height_offset, 15, 0xFFFF, ReadSpeedText}
+			#else
+				TEXT{width_offset, height_offset, 15, 0xFFFF, ReadSpeedUnkText}
+			#endif
+		#endif
+	#endif
+#endif

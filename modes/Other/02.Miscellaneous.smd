@@ -1,0 +1,43 @@
+Name = Miscellaneous
+NAME_LOCALE{"PL-PL", "Różności"}
+
+MultimediaText   = IETF{"Multimedia clock rates:"}
+NetworkText      = IETF{"Network:"}
+WiFiText         = IETF{"Type: Wi-Fi"}
+ShowPasswordText = IETF{"Press Y to show password"}
+EthernetText     = IETF{"Type: Ethernet"}
+NotConnectedText = IETF{"Type: Not connected"}
+
+
+IETF_LOCALE{MultimediaText,   "PL-PL", "Zegary układów multimedialnych:"}
+IETF_LOCALE{NetworkText,      "PL-PL", "Sieć:"}
+IETF_LOCALE{WiFiText,         "PL-PL", "Rodzaj: Wi-Fi"}
+IETF_LOCALE{ShowPasswordText, "PL-PL", "Naciśnij Y by zobaczyć hasło"}
+IETF_LOCALE{EthernetText,     "PL-PL", "Rodzaj: Ethernet"}
+IETF_LOCALE{NotConnectedText, "PL-PL", "Rodzaj: niepodłączona"}
+
+EnableMisc = true
+Text1: {"NVDEC: %u.%u MHz", Misc_NvDecHz_int / 1000000, (Misc_NvDecHz_int / 100000) % 10}
+Text2: {"NVENC: %u.%u MHz", Misc_NvEncHz_int / 1000000, (Misc_NvEncHz_int / 100000) % 10}
+Text3: {"NVJPG: %u.%u MHz", Misc_NvJpgHz_int / 1000000, (Misc_NvJpgHz_int / 100000) % 10}
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Start:
+VAR{Text, Text1 + "\n" + Text2 + "\n" + Text3}
+TEXT{0, 120, 20, 0xFFFF, IETF_GET{MultimediaText}}
+TEXT{15, 140, 15, 0xFFFF, Text}
+TEXT{0, 215, 20, 0xFFFF, IETF_GET{NetworkText}}
+#if $Misc_NetworkConnectionType_int == 1
+	TEXT{0, 240, 18, 0xFFFF, IETF_GET{WiFiText}}
+	#if $Misc_IsWiFiPassphrase
+		#if $System_KeysHeld_int == $System_Key_Y
+			TEXT{0, 265, 15, 0xFFFF, Misc_WiFiPassphrase_str}
+		#else
+			TEXT{0, 265, 15, 0xFFFF, IETF_GET{ShowPasswordText}}
+		#endif
+	#endif
+#elif $Misc_NetworkConnectionType_int == 2
+	TEXT{0, 240, 18, 0xFFFF, IETF_GET{EthernetText}}
+#else
+	TEXT{0, 240, 18, 0xFFFF, IETF_GET{NotConnectedText}}
+#endif

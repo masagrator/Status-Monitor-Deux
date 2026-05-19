@@ -128,6 +128,11 @@ private:
 		}
 	}
 
+	static void PreRecordCallback(std::string& outLocaleCode, void* user) {
+		outLocaleCode = overrideLanguage;
+		return;
+	}
+
 	static void RecordCallback(smd::RenderCommand& cmd, void* user) {
 		auto* m_renderer = static_cast<tsl::gfx::Renderer*>(user);
 
@@ -250,9 +255,10 @@ public:
 		formatButtonCombination(formattedKeyCombo);
 		SystemData.formattedKeyCombo = formattedKeyCombo;
 		smd::Document::PeekInfo info;
-		smd::Document::Peek(filepath.c_str(), info);
+		smd::Document::Peek(filepath.c_str(), info, overrideLanguage.c_str());
 		name = info.name;
 		doc.Free();
+		doc.SetRecordCallback(PreRecordCallback, nullptr);
 		if (doc.LoadFromFile(filepath.c_str()) == false) {
 			error = doc.LastError();
 			return;

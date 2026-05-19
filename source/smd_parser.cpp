@@ -511,6 +511,18 @@ struct Document::Impl {
 
 	uint32_t crc32;
 
+	// ---- IETF locale support ----
+	// RecordCallback fires once per Document (on the first IETF{} declaration
+	// in the config section) to ask the host which locale key it wants.
+	// The result is cached for the Document's lifetime.
+	// ietfRecordCb / ietfRecordUser survive Free() so the host only sets
+	// them once; ietfLocaleCached / ietfLocaleCode are reset by Free() so a
+	// reload re-fires the callback.
+	Document::RecordCallback ietfRecordCb   = nullptr;
+	void*                    ietfRecordUser = nullptr;
+	std::string              ietfLocaleCode;
+	bool                     ietfLocaleCached = false;
+
 	// Set by Reset(/*freeze=*/true). When true, Evaluate() skips
 	// RefreshScratches() so every host-bound value and every cached string
 	// VAR stays exactly as it was on the previous frame. Cleared at the
@@ -593,6 +605,28 @@ static std::string Unescape(const std::string& s) {
 				break;
 			}
 			default: out.push_back('\\'); out.push_back(e); break;
+		}
+	}
+	return out;
+}
+
+// Re-escape a plain string so it can be embedded as a "..." literal in an
+// .smd source line. The inverse of Unescape: control characters that would
+// otherwise confuse the parser are turned back into their backslash forms.
+// Used by the IETF pre-pass to bake resolved IETF strings into the source
+// lines that the main parser then reads normally.
+static std::string RescapeForLiteral(const std::string& s) {
+	std::string out;
+	out.reserve(s.size() + 4);
+	for (unsigned char c : s) {
+		switch (c) {
+			case '"':  out += "\\\""; break;
+			case '\\': out += "\\\\"; break;
+			case '\n': out += "\\n";  break;
+			case '\r': out += "\\r";  break;
+			case '\t': out += "\\t";  break;
+			case '\0': out += "\\0";  break;
+			default:   out.push_back((char)c); break;
 		}
 	}
 	return out;
@@ -1982,6 +2016,11 @@ void Document::Free() {
 	m_impl->lastError.clear();
 	m_impl->lastErrorWrapped.clear();
 	m_impl->lastErrorWrappedOf = 0;
+	// Reset locale cache so the next LoadFromMemory re-fires RecordCallback.
+	// The callback pointer and user data themselves survive Free() -- the host
+	// should only need to call SetRecordCallback() once per Document.
+	m_impl->ietfLocaleCached = false;
+	m_impl->ietfLocaleCode.clear();
 	// After clearing every prior state, restore the hardcoded read/write
 	// defaults. Calling GetConfigInt("LayerWidth") on a freed Document
 	// returns 448 again, matching the spec ("Free() restores them to
@@ -2192,6 +2231,216 @@ bool Document::LoadFromMemory(const char* data, size_t size) {
 			break;
 		}
 	}
+
+	// -------- IETF pre-pass --------
+	// Handles three config-section-only directives before the main parse:
+	//
+	//   key = IETF{"default string"}
+	//       Declares an IETF-localised string object. The key lands in the
+	//       config map as a ConfigKind::String once the pre-pass has baked
+	//       the final (post-locale) value into the source line.
+	//
+	//   IETF_LOCALE{key, "locale-code", "localised string"}
+	//       If locale-code matches the locale code obtained from
+	//       RecordCallback, overwrites key's string with the localised value.
+	//       Standalone line (no = / : separator); cleared to "" so the main
+	//       parse skips it.
+	//
+	//   NAME_LOCALE{"locale-code", "localised name"}
+	//       Only consumed by the Peek* family of functions; cleared here so
+	//       the main parse never sees it.
+	//
+	// Additionally, wherever IETF_GET{key} appears in any line (config or
+	// render script), it is replaced with "escaped-value-of-key" so the main
+	// parser receives an ordinary quoted string literal.
+	{
+		// Helper: find the first ':' or '=' at brace/string depth 0.
+		auto findSep = [](const std::string& ln, size_t& outPos, char& outCh) -> bool {
+			int depth = 0; bool inStr = false;
+			for (size_t j = 0; j < ln.size(); ++j) {
+				char c = ln[j];
+				if (inStr) {
+					if (c == '\\' && j + 1 < ln.size()) { ++j; continue; }
+					if (c == '"') inStr = false;
+					continue;
+				}
+				if (c == '"') { inStr = true; continue; }
+				if (c == '{') ++depth;
+				else if (c == '}') --depth;
+				else if (depth == 0 && (c == ':' || c == '=')) {
+					outPos = j; outCh = c; return true;
+				}
+			}
+			return false;
+		};
+
+		// Helper: parse a raw quoted string ("..."), returning the Unescape'd
+		// content. Returns false if the value doesn't start with '"'.
+		auto parseQ = [](const std::string& s, std::string& out) -> bool {
+			std::string v = Trim(s);
+			if (v.size() < 2 || v.front() != '"') return false;
+			size_t i = 1;
+			while (i < v.size()) {
+				if (v[i] == '\\' && i + 1 < v.size()) { i += 2; continue; }
+				if (v[i] == '"') break;
+				++i;
+			}
+			if (i >= v.size()) return false;
+			out = Unescape(v.substr(1, i - 1));
+			return true;
+		};
+
+		// Sub-pass A: collect IETF declarations and IETF_LOCALE directives.
+		struct PendingLocale { std::string key, locale, value; };
+		std::unordered_map<std::string, std::string> ietfMap; // name -> string
+		std::vector<PendingLocale> pending;
+		bool anyIetf = false;
+
+		for (size_t i = 0; i < startIdx; ++i) {
+			const std::string& ln = lines[i];
+			if (ln.empty()) continue;
+
+			// IETF_LOCALE{key, "locale", "value"} — standalone directive.
+			if (StartsWith(ln, "IETF_LOCALE{")) {
+				size_t lb = ln.find('{');
+				std::string body; size_t endIdx2; std::string e2;
+				if (lb != std::string::npos
+					&& ExtractBraceBody(ln, lb, body, endIdx2, e2)) {
+					auto parts = SplitTopLevelCommas(body);
+					if (parts.size() == 3) {
+						PendingLocale pl;
+						pl.key = Trim(parts[0]);
+						if (!pl.key.empty() && pl.key[0] == '$')
+							pl.key.erase(0, 1);
+						if (parseQ(parts[1], pl.locale)
+							&& parseQ(parts[2], pl.value))
+							pending.push_back(std::move(pl));
+					}
+				}
+				continue; // handled; will be cleared in rewrite pass below
+			}
+
+			// NAME_LOCALE — only for Peek functions, nothing to collect here.
+			if (StartsWith(ln, "NAME_LOCALE{")) continue;
+
+			// key SEP IETF{"..."}
+			size_t sepPos = 0; char sepCh = 0;
+			if (!findSep(ln, sepPos, sepCh)) continue;
+			std::string val = Trim(ln.substr(sepPos + 1));
+			if (val.compare(0, 5, "IETF{") != 0) continue;
+
+			std::string key = Trim(ln.substr(0, sepPos));
+			// Extract the string from IETF{...}
+			size_t lb = val.find('{');
+			std::string body; size_t endIdx2; std::string e2;
+			if (lb == std::string::npos
+				|| !ExtractBraceBody(val, lb, body, endIdx2, e2)) continue;
+			std::string bodyT = Trim(body);
+			std::string ietfStr;
+			if (!bodyT.empty() && bodyT.front() == '"') {
+				if (!parseQ(bodyT, ietfStr)) ietfStr = bodyT;
+			} else {
+				ietfStr = bodyT;
+			}
+			ietfMap[key] = ietfStr;
+			anyIetf = true;
+		}
+
+		// Sub-pass B: fire RecordCallback once on first IETF encounter.
+		if (anyIetf && m_impl->ietfRecordCb && !m_impl->ietfLocaleCached) {
+			m_impl->ietfRecordCb(m_impl->ietfLocaleCode, m_impl->ietfRecordUser);
+			m_impl->ietfLocaleCached = true;
+		}
+
+		// Sub-pass C: apply matching IETF_LOCALE entries to ietfMap.
+		for (auto& pl : pending) {
+			if (pl.locale == m_impl->ietfLocaleCode) {
+				auto it = ietfMap.find(pl.key);
+				if (it != ietfMap.end()) it->second = pl.value;
+			}
+		}
+
+		// Sub-pass D: rewrite lines.
+		//
+		// Rewriter for IETF_GET{X}: replaces every top-level (outside string
+		// literals) occurrence with "escaped-value-of-X". Returns the line
+		// unchanged when no IETF_GET is present (fast path).
+		auto rewriteIetfGet = [&](const std::string& ln2) -> std::string {
+			if (ln2.find("IETF_GET") == std::string::npos) return ln2;
+			std::string out;
+			out.reserve(ln2.size());
+			bool inStr = false;
+			size_t i = 0;
+			while (i < ln2.size()) {
+				char c = ln2[i];
+				if (inStr) {
+					out.push_back(c);
+					if (c == '\\' && i + 1 < ln2.size())
+						out.push_back(ln2[++i]);
+					else if (c == '"') inStr = false;
+					++i; continue;
+				}
+				if (c == '"') { inStr = true; out.push_back(c); ++i; continue; }
+				// Detect "IETF_GET{" (9 chars: I E T F _ G E T {)
+				if (i + 9 <= ln2.size()
+					&& ln2.compare(i, 9, "IETF_GET{") == 0) {
+					size_t brace = i + 8; // points at '{'
+					std::string body2; size_t endIdx3; std::string e3;
+					if (ExtractBraceBody(ln2, brace, body2, endIdx3, e3)) {
+						std::string ident = Trim(body2);
+						if (!ident.empty() && ident[0] == '$') ident.erase(0, 1);
+						auto it = ietfMap.find(ident);
+						std::string resolved = (it != ietfMap.end())
+							? it->second : std::string();
+						out.push_back('"');
+						out += RescapeForLiteral(resolved);
+						out.push_back('"');
+						i = endIdx3;
+						continue;
+					}
+				}
+				out.push_back(c);
+				++i;
+			}
+			return out;
+		};
+
+		for (size_t i = 0; i < lines.size(); ++i) {
+			if (i == startIdx) continue; // leave "Start:" intact
+			std::string& ln2 = lines[i];
+			if (ln2.empty()) continue;
+
+			if (i < startIdx) {
+				// Config section ------------------------------------------
+
+				// Clear standalone directives so the main parse skips them.
+				if (StartsWith(ln2, "IETF_LOCALE{")
+					|| StartsWith(ln2, "NAME_LOCALE{")) {
+					ln2.clear();
+					continue;
+				}
+
+				// Rewrite "key SEP IETF{...}" → "key SEP "escaped-value""
+				size_t sepPos = 0; char sepCh2 = 0;
+				if (findSep(ln2, sepPos, sepCh2)) {
+					std::string val = Trim(ln2.substr(sepPos + 1));
+					if (val.compare(0, 5, "IETF{") == 0) {
+						std::string key = Trim(ln2.substr(0, sepPos));
+						auto it = ietfMap.find(key);
+						std::string str = (it != ietfMap.end()) ? it->second : "";
+						// Reconstruct line with quoted literal value.
+						ln2 = key + (sepCh2 == '=' ? " = " : ": ")
+							+ "\"" + RescapeForLiteral(str) + "\"";
+						continue;
+					}
+				}
+			}
+
+			// Apply IETF_GET{...} rewriting to config and script lines alike.
+			ln2 = rewriteIetfGet(ln2);
+		}
+	}
+	// -------- End IETF pre-pass --------
 
 	// -------- Config section --------
 	// Two separator characters are supported:
@@ -2600,7 +2849,8 @@ static bool ParseIntLiteral(const std::string& raw, int64_t* out) {
 	return true;
 }
 
-bool Document::PeekFromMemory(const char* data, size_t size, PeekInfo& out) {
+bool Document::PeekFromMemory(const char* data, size_t size, PeekInfo& out,
+							  const char* ietf_code) {
 	out.name.clear();
 	out.layerWidth  = 0;
 	out.layerHeight = 0;
@@ -2646,7 +2896,27 @@ bool Document::PeekFromMemory(const char* data, size_t size, PeekInfo& out) {
 				else if (depth == 0 && c == '=') { sep = j; break; }
 			}
 		}
-		if (sep == std::string::npos) continue;
+		if (sep == std::string::npos) {
+			// NAME_LOCALE{"locale-code", "localised name"}
+			// Replaces the Name value when the locale code matches ietf_code.
+			if (ietf_code && foundName && StartsWith(line, "NAME_LOCALE{")) {
+				size_t lb = line.find('{');
+				std::string body; size_t endIdx2; std::string e2;
+				if (lb != std::string::npos
+					&& ExtractBraceBody(line, lb, body, endIdx2, e2)) {
+					std::vector<std::string> parts = SplitTopLevelCommas(body);
+					if (parts.size() == 2) {
+						std::string locale, localName;
+						if (ExtractStringLikeValue(parts[0], locale)
+							&& ExtractStringLikeValue(parts[1], localName)
+							&& locale == ietf_code) {
+							out.name = localName;
+						}
+					}
+				}
+			}
+			continue;
+		}
 
 		std::string key  = Trim(line.substr(0, sep));
 		std::string rest = Trim(line.substr(sep + 1));
@@ -2664,7 +2934,7 @@ bool Document::PeekFromMemory(const char* data, size_t size, PeekInfo& out) {
 	return foundName;
 }
 
-bool Document::Peek(const char* path, PeekInfo& out) {
+bool Document::Peek(const char* path, PeekInfo& out, const char* ietf_code) {
 	out.name.clear();
 	out.layerWidth  = 0;
 	out.layerHeight = 0;
@@ -2680,21 +2950,23 @@ bool Document::Peek(const char* path, PeekInfo& out) {
 		if (got != (size_t)sz) { std::fclose(fp); return false; }
 	}
 	std::fclose(fp);
-	return PeekFromMemory(buf.data(), buf.size(), out);
+	return PeekFromMemory(buf.data(), buf.size(), out, ietf_code);
 }
 
 // Backwards-compatible wrappers that only fill the Name.
-bool Document::PeekName(const char* path, std::string& outName) {
+bool Document::PeekName(const char* path, std::string& outName,
+						const char* ietf_code) {
 	PeekInfo info;
-	bool ok = Peek(path, info);
+	bool ok = Peek(path, info, ietf_code);
 	outName = std::move(info.name);
 	return ok;
 }
 
 bool Document::PeekNameFromMemory(const char* data, size_t size,
-								  std::string& outName) {
+								  std::string& outName,
+								  const char* ietf_code) {
 	PeekInfo info;
-	bool ok = PeekFromMemory(data, size, info);
+	bool ok = PeekFromMemory(data, size, info, ietf_code);
 	outName = std::move(info.name);
 	return ok;
 }
@@ -2702,6 +2974,11 @@ bool Document::PeekNameFromMemory(const char* data, size_t size,
 // ===========================================================================
 // Binding API
 // ===========================================================================
+
+void Document::SetRecordCallback(RecordCallback cb, void* user) {
+	m_impl->ietfRecordCb   = cb;
+	m_impl->ietfRecordUser = user;
+}
 
 static void DoBind(Document::Impl& im, const char* name, const void* p, BindType t) {
 	HostBinding b;

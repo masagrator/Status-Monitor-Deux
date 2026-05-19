@@ -1,0 +1,62 @@
+Name = Counter
+NAME_LOCALE{"PL-PL", "Licznik"}
+
+User_RefreshRate = 10
+;;User_RefreshRate_Description = "Max FPS of rendered overlay. It won't be faster than your current refresh rate because of vsync."
+;;User_RefreshRate_DefaultValue = 10
+;;User_RefreshRate_Range = {int, 1, 60}
+User_TextColor = COLOR{0xFFFF}
+;;User_TextColor_Description_en = "Color of FPS value."
+;;User_TextColor_DefaultValue = COLOR{0xFFFF}
+User_BoxColor = COLOR{0x1117}
+;;User_BoxColor_Description_en = "Color of background."
+;;User_BoxColor_DefaultValue = COLOR{0x1117}
+User_HandheldFontSize = 40
+;;User_HandheldFontSize_Description_en = "Size of text in handheld mode."
+;;User_HandheldFontSize_DefaultValue = 40
+;;User_HandheldFontSize_Range = {int, 8, 150}
+User_DockedFontSize = 40
+;;User_DockedFontSize_Description_en = "Size of text in docked mode."
+;;User_DockedFontSize_DefaultValue = 40
+;;User_DockedFontSize_Range = {int, 8, 150}
+User_OldFpsAverage = false
+;;User_OldFpsAverage_Description_en = "Don't clamp FPS if they are in close range of PFPS value."
+;;User_ShowReadSpeed_DefaultValue = false
+
+BackgroundColor = COLOR{0x0000}
+COMMON_MARGIN = 0
+Movable = true
+HeaderText = false
+FooterText = false
+UseCustomExitCombo = true
+EnableControls = false
+ClampToLayerBottom = true
+ClampToLayerRight = true
+
+EnableGame = true
+FPStext: {"%2.1f", User_OldFpsAverage ? Game_FpsAvgOld_float : Game_FpsAvg_float}
+FPSnoDataText = "n/d"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Start:
+#if $System_IsDocked
+	VAR{fontsize, User_DockedFontSize}
+#else
+	VAR{fontsize, User_HandheldFontSize}
+#endif
+VAR{margin, fontsize / 8}
+#if $EnableGame
+	#if $Game_IsGameRunning
+		VAR{FpsAvg, User_OldFpsAverage ? Game_FpsAvgOld_float : Game_FpsAvg_float}
+		#if FpsAvg >= 254 or FpsAvg < 0
+			VAR{Text, FPSnoDataText}
+		#else
+			VAR{Text, FPStext}
+		#endif
+	#else
+		VAR{Text, FPSnoDataText}
+	#endif
+#endif
+GET_DIMENSIONS{Dimensions, fontsize, Text}
+BOX{0, 0, Dimensions.x + margin, fontsize + (margin / 2), User_BoxColor}
+TEXT{0, fontsize - margin, fontsize, User_TextColor, Text}

@@ -1,0 +1,101 @@
+Name = Graph
+NAME_LOCALE{"PL-PL", "Wykres"}
+
+User_RefreshRate = 30
+;;User_RefreshRate_Description = "Max FPS of rendered overlay. It won't be faster than your current refresh rate because of vsync."
+;;User_RefreshRate_DefaultValue = 30
+;;User_RefreshRate_Range = {int, 1, 60}
+User_FpsCounterColor = COLOR{0x4444}
+;;User_FpsCounterColor_Description = "Color of numeric counter behind graph."
+;;User_FpsCounterColor_DefaultValue = COLOR{0x4444}
+User_BorderColor = COLOR{0xF77F}
+;;User_BorderColor_Description = "Color of border surrounding graph."
+;;User_BorderColor_DefaultValue = COLOR{0xF77F}
+User_DashedLineColor = COLOR{0x8888}
+;;User_DashedLineColor_Description = "Color of dashed line that is in the middle of graph."
+;;User_DashedLineColor_DefaultValue = COLOR{0x8888}
+User_MainLineColor = COLOR{0xFFFF}
+;;User_MainLineColor_Description = "Main color of line chart."
+;;User_MainLineColor_DefaultValue = COLOR{0xFFFF}
+User_RoundedLineColor = COLOR{0xF0FF}
+;;User_RoundedLineColor_Description = "Color of line if rounded FPS value is equal to half of refresh rate."
+;;User_RoundedLineColor_DefaultValue = COLOR{0xF0FF}
+User_PerfectLineColor = COLOR{0x0C0F}
+;;User_PerfectLineColor_Description = "Color of line if rounded FPS value is equal to refresh rate."
+;;User_PerfectLineColor_DefaultValue = COLOR{0x0C0F}
+User_BoxColor = COLOR{0x1117}
+;;User_BoxColor_Description = "Color of background."
+;;User_BoxColor_DefaultValue = COLOR{0x1117}
+User_MinValueColor = COLOR{0xFFFF}
+;;User_MinValueColor_Description = "Color of lowest value printed on the bottom left."
+;;User_MinValueColor_DefaultValue = COLOR{0xFFFF}
+User_MaxValueColor = COLOR{0xFFFF}
+;;User_MaxValueColor_Description = "Color of highest value printed on the top left."
+;;User_MaxValueColor_DefaultValue = COLOR{0xFFFF}
+User_OldFpsAverage = false
+;;User_OldFpsAverage_Description = "Don't clamp FPS if they are in close range of PFPS value."
+;;User_ShowReadSpeed_DefaultValue = false
+User_GraphWidth = 180
+;;User_GraphWidth_Description = "Width of graph."
+;;User_GraphWidth_DefaultValue = 180
+;;User_GraphWidth_Range = {int, 10, 400}
+User_GraphHeight: 0
+;;User_GraphHeight_Description = "Height of graph, 0 adjusts to current refresh rate."
+;;User_GraphHeight_DefaultValue = 0
+;;User_GraphHeight_Range = {int, 10, 710}
+
+COMMON_MARGIN = 0
+BackgroundColor = COLOR{0x0000}
+Movable = true
+HeaderText = false
+FooterText = false
+UseCustomExitCombo = true
+EnableControls = false
+HeightOverriden: false
+ClampToLayerBottom = true
+ClampToLayerRight = true
+
+EnableGame = true
+FPSreading = HISTORY{float, 180}
+GraphConditions: GRAPH_CONDITIONS{{round(x) == System_DisplayRefreshRate_int, User_PerfectLineColor, 0x0000}, {round(x * 2) == System_DisplayRefreshRate_int, User_RoundedLineColor, 0x0000}}
+FPStext: {"%.1f", User_OldFpsAverage ? Game_FpsAvgOld_float : Game_FpsAvg_float}
+FPSmax: {"%d", System_DisplayRefreshRate_int}
+lastFrame: 0
+gameWasActive: false
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Start:
+GET_DIMENSIONS{MaxSize, 10, FPSmax}
+#if $User_GraphHeight == 0
+	VAR{User_GraphHeight, System_DisplayRefreshRate_int}
+	VAR{HeightOverriden, true}
+#elif $HeightOverriden
+	VAR{User_GraphHeight, System_DisplayRefreshRate_int}
+	#if $User_GraphHeight > 80
+		VAR{User_GraphHeight, 80}
+	#endif
+#endif
+VAR{BoxWidth, User_GraphWidth + MaxSize.x + 10}
+BOX{0, 0, BoxWidth, User_GraphHeight + 12, User_BoxColor}
+VAR{FPSavg, User_OldFpsAverage ? Game_FpsAvgOld_float : Game_FpsAvg_float}
+VAR{TextBaseOffset, MaxSize.x + 2}
+#if $FPSavg < 254 and $FPSavg >= 0
+	GET_DIMENSIONS{dimensions, User_GraphHeight + 4, FPStext}
+	TEXT{TextBaseOffset + (((User_GraphWidth + 2) - dimensions.x) / 2), User_GraphHeight + 4, User_GraphHeight + 4, User_FpsCounterColor, FPStext}
+#endif
+EMPTY_BOX{TextBaseOffset, 5, User_GraphWidth + 2, User_GraphHeight + 2, User_BorderColor}
+DASHED_LINE{TextBaseOffset + 1, 6 + (User_GraphHeight / 2), (User_GraphWidth + 1) + TextBaseOffset + 1, 6 + (User_GraphHeight / 2), 6, 3, User_DashedLineColor}
+TEXT{0, 13, 10, User_MaxValueColor, FPSmax}
+TEXT{TextBaseOffset - 9, User_GraphHeight + 7, 10, User_MinValueColor, "0"}
+#if $Game_IsGameRunning
+	VAR{gameWasActive, true}
+	#if $Game_LastFrameNumber_int > $lastFrame
+		HISTORY_UPDATE{FPSreading, Game_FpsAvg_float}
+		VAR{lastFrame, Game_LastFrameNumber_int}
+	#endif
+#elif $gameWasActive
+	HISTORY_CLEAN{FPSreading}
+	VAR{gameWasActive, false}
+	VAR{lastFrame, 0}
+#endif
+GRAPH_LINE_CHART{TextBaseOffset+1, 6, User_GraphWidth, User_GraphHeight, 0, System_DisplayRefreshRate_int, RIGHT_TO_LEFT, User_MainLineColor, 0x0000, GraphConditions, FPSreading}

@@ -210,6 +210,13 @@ class Document {
 public:
     typedef void (*Callback)(RenderCommand& cmd, void* user);
 
+    // Called once per Document on the first IETF{} declaration encountered
+    // during LoadFromFile / LoadFromMemory. The host writes the desired IETF
+    // locale key (e.g. "PL-PL") into outLocaleCode. The parser caches it for
+    // the Document's lifetime; it will not be queried again even after a
+    // subsequent Load. Must be set before Load for it to take effect.
+    typedef void (*RecordCallback)(std::string& outLocaleCode, void* user);
+
     Document();
     ~Document();
 
@@ -222,16 +229,28 @@ public:
     bool LoadFromMemory(const char* data, size_t size);
     uint32_t GetFileHash();
 
+    // Set the callback used to query the host for the active IETF locale key.
+    // Call before LoadFromFile / LoadFromMemory. The callback and user pointer
+    // survive Free() so they do not need to be re-set between loads.
+    void SetRecordCallback(RecordCallback cb, void* user);
+
     struct PeekInfo {
         std::string name;
         int64_t     layerWidth  = 0;
         int64_t     layerHeight = 0;
     };
-    static bool Peek          (const char* path, PeekInfo& out);
-    static bool PeekFromMemory(const char* data, size_t size, PeekInfo& out);
-    static bool PeekName          (const char* path, std::string& outName);
+    // ietf_code: optional IETF locale key (e.g. "PL-PL"). When non-null and
+    // a matching NAME_LOCALE{} directive is present in the file, the
+    // localised name is returned instead of the default Name value.
+    static bool Peek          (const char* path, PeekInfo& out,
+                               const char* ietf_code = nullptr);
+    static bool PeekFromMemory(const char* data, size_t size, PeekInfo& out,
+                               const char* ietf_code = nullptr);
+    static bool PeekName          (const char* path, std::string& outName,
+                                   const char* ietf_code = nullptr);
     static bool PeekNameFromMemory(const char* data, size_t size,
-                                   std::string& outName);
+                                   std::string& outName,
+                                   const char* ietf_code = nullptr);
 
     void BindInt64 (const char* name, const int64_t* ptr);
     void BindFloat (const char* name, const float*   ptr);
