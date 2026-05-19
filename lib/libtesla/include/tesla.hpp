@@ -1062,6 +1062,9 @@ namespace tsl {
 				eventWait(&this->m_vsyncEvent, UINT64_MAX);
 			}
 
+			#pragma GCC push_options
+			#pragma GCC optimize ("O3")
+
 			/**
 			 * @brief Decodes a x and y coordinate into a offset into the swizzled framebuffer
 			 * 
@@ -1085,6 +1088,8 @@ namespace tsl {
 				
 				return tmpPos / 2;
 			}
+
+			#pragma GCC pop_options
 
 			/**
 			 * @brief Initializes the renderer and layers
