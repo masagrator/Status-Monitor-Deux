@@ -587,10 +587,10 @@ These are read by the host but can also be overridden in your `.smd` config sect
 
 | Key                  | Default                         | Notes                                                 |
 |----------------------|---------------------------------|-------------------------------------------------------|
-| `COMMON_MARGIN`      | `20`                            | Pixel margin used by the host's frame chrome.         |
+| `COMMON_MARGIN`      | `20`                            | Pixel left margin used by the host's frame chrome.    |
 | `BackgroundColor`    | `COLOR{0x000D}`                 | Background fill color (use 0x0000 for no background). |
 | `ComboButtonFooter`  | `"\uE0E1  Back     \uE0E0  OK"` | Footer hint text.                                     |
-| `Movable`            | `false`                         | Can the user drag the overlay?                        |
+| `Movable`            | `false`                         | Can move with touch screen or sixaxis?                |
 | `User_RefreshRate`   | `60`                            | Target FPS for the overlay.                           |
 | `EnableCPU`          | `false`                         | Enable refreshing CPU_* variables.                    |
 | `EnableGPU`          | `false`                         | Enable refreshing GPU_* variables.                    |
@@ -600,10 +600,10 @@ These are read by the host but can also be overridden in your `.smd` config sect
 | `EnableGame`         | `false`                         | Enable refreshing Game_* variables.                   |
 | `LayerWidth`         | `448`                           | Overlay layer width.                                  |
 | `LayerHeight`        | `720`                           | Overlay layer height.                                 |
-| `HeaderText`         | `true`                          | Draw the host's title bar?                            |
-| `FooterText`         | `true`                          | Draw the host's footer hint?                          |
-| `UseCustomExitCombo` | `false`                         | Honour a custom exit combo from `formattedKeyCombo`?  |
-| `EnableControls`     | `true`                          | Accept input events?                                  |
+| `HeaderText`         | `true`                          | Draw the title bar?                                   |
+| `FooterText`         | `true`                          | Draw the default footer?                              |
+| `UseCustomExitCombo` | `false`                         | Honour a custom exit combo from config file?          |
+| `EnableControls`     | `true`                          | Enable input for applets?                             |
 
 ---
 
