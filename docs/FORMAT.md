@@ -181,6 +181,60 @@ Down    = LIST{int, RANGE{10, 0, -2}}  ; -> 10, 8, 6, 4, 2
 
 The sequence includes `start` and continues while strictly below `end` (or strictly above, when `step` is negative). Equal `start` and `end`, or a step pointing the wrong way, produces an empty list — no error. `step` of `0` is a parse error. RANGE only generates integers; `LIST{float, RANGE{...}}` is rejected.
 
+#### IETF - `IETF{string}`
+
+A special kind of string storage used for translations. string represents a text that is used when system/overriden language is not detected.
+
+```
+WarningText = IETF{"Game is not running or it's incompatible."}
+```
+
+#### IETF_LOCALE - `IETF_LOCALE{name, IETF code string, string}`
+
+Assign string to local variable initiated with `IETF{string}` only if provided IETF code matches what program expects.
+
+IETF code is determined by system language or can be overriden by editing `config.ini` in `config/system-monitor-deux/`, enabling `override_language` by writing:
+```ini
+override_language=true
+```
+and changing `override_language_ietf_code` to language supported by SMD and locale files. If it's not correct, program will fallback to default string.
+
+List of codes supported natively by system:
+- `JP-JP` (Japanese)
+- `EN-US` (American English)
+- `FR-FR` (French)
+- `DE-DE` (German)
+- `IT-IT` (Italian)
+- `ES-ES` (Spanish)
+- `ZH-CN` (Chinese Simplified)
+- `ZH-TW` (Chinese Traditional)
+- `KO-KR` (Korean)
+- `NL-NL` (Dutch)
+- `PT-PT` (Portuguese)
+- `RU-RU` (Russian)
+- `EN-GB` (British English)
+- `FR-CA` (Canadian French)
+- `ES-419` (Latin Spanish)
+- `PT-BR` (Brazilian Portuguese)
+
+Any other language must be forced via `config.ini`.
+
+```
+IETF_LOCALE{WarningText, "PL-PL", "Gra jest nieuruchomiona lub niekompatybilna."}
+```
+
+#### IETF_GET - `IETF_GET{name}`
+
+Get string from local variable initiated with `IETF{string}`.
+
+```
+TEXT{0, 20, 18, User_WarningColor, IETF_GET{WarningText}}
+```
+
+#### NAME_LOCALE - `NAME_LOCALE{ietf code string, string}`
+
+Assign string to `Name` variable if provided ietf code string matches what program expects. Read more about it in `IETF_LOCALE` section.
+
 ---
 
 ## 3. Render script
@@ -533,35 +587,27 @@ Names the host fills in every frame. You read them in any expression; you cannot
 
 ### CPU
 `CPU_Hz_int`, `CPU_Core0Load_double`, `CPU_Core1Load_double`, `CPU_Core2Load_double`, `CPU_Core3Load_double`.
-
 Available only with sys-clk or hoc-clk: `CPU_RealHz_int`, `CPU_DeltaHz_int`
 
 ### GPU
 `GPU_Hz_int`, `GPU_Load_int`.
-
 Available only with sys-clk or hoc-clk: `GPU_RealHz_int`, `GPU_DeltaHz_int`
 
 ### RAM
 `RAM_Hz_int`, `RAM_UsedAllMB_float`, `RAM_TotalAllMB_float`, `RAM_UsedApplicationMB_float`, `RAM_TotalApplicationMB_float`, `RAM_UsedAppletMB_float`, `RAM_TotalAppletMB_float`, `RAM_UsedSystemMB_float`, `RAM_TotalSystemMB_float`, `RAM_UsedSystemUnsafeMB_float`, `RAM_TotalSystemUnsafeMB_float`.
-
 Available only with sys-clk or hoc-clk:  `RAM_RealHz_int`, `RAM_DeltaHz_int`, `RAM_LoadAll_int`, `RAM_LoadCPU_int`
-
 Avaialble only with hoc-clk: `RAM_HocClkRamBWAll_int`, `RAM_HocClkRamBWCpu_int`, `RAM_HocClkRamBWGpu_int`, `RAM_HocClkRamBWPeak_int`
 
 ### Board
 `Board_ChargerCurrentLimit_int`, `Board_ChargerVoltageLimit_int`, `Board_ChargerConnected_int`, `Board_BatteryCurrentAvg_float`, `Board_BatteryVoltageAvg_float`, `Board_IsBatteryFiltered`, `Board_BatteryAgePercentage_float`, `Board_BatteryChargePercentage_float`, `Board_BatteryTemperatureCelcius_float`, `Board_DesignedFullBatteryCapacity_float`, `Board_ActualFullBatteryCapacity_float`, `Board_PowerConsumption_float`, `Board_BatteryTimeEstimateInMinutes_int`, `Board_SocTemperatureCelsius_float`, `Board_PcbTemperatureCelsius_float`, `Board_SkinTemperatureMiliCelsius_int`, `Board_FanRotationPercentageLevel_float`.
-
 Available only with hoc-clk: `Board_HocClkThermalSensorCPU_int`, `Board_HocClkThermalSensorGPU_int`, `Board_HocClkThermalSensorMEM_int`, `Board_HocClkThermalSensorPLLX_int`, `Board_HocClkThermalSensorAO_int`, `Board_HocClkThermalSensorBQ24193_int`
 
 ### Game
 Available only with SaltyNX
-
-
 `Game_LastFrameNumber_int`, `Game_IsGameRunning`, `Game_FPS_int`, `Game_FpsAvgOld_float`, `Game_FpsAvg_float`, `Game_ReadSpeedPerSecond_float`, `Game_ResolutionRenderCalls_int` (struct array of 8: `[N].width`/`.height`/`.calls`), `Game_ResolutionViewportCalls_int` (same shape).
 
 ### System
 `System_IsDocked`, `System_KeysDown_int`, `System_KeysHeld_int`, `formattedKeyCombo` (string).
-
 Available only with SaltyNX: `System_DisplayRefreshRate_int`
 
 ### Misc
@@ -587,10 +633,10 @@ These are read by the host but can also be overridden in your `.smd` config sect
 
 | Key                  | Default                         | Notes                                                 |
 |----------------------|---------------------------------|-------------------------------------------------------|
-| `COMMON_MARGIN`      | `20`                            | Pixel left margin used by the host's frame chrome.    |
+| `COMMON_MARGIN`      | `20`                            | Pixel margin used by the host's frame chrome.         |
 | `BackgroundColor`    | `COLOR{0x000D}`                 | Background fill color (use 0x0000 for no background). |
 | `ComboButtonFooter`  | `"\uE0E1  Back     \uE0E0  OK"` | Footer hint text.                                     |
-| `Movable`            | `false`                         | Can move with touch screen or sixaxis?                |
+| `Movable`            | `false`                         | Can the user drag the overlay?                        |
 | `User_RefreshRate`   | `60`                            | Target FPS for the overlay.                           |
 | `EnableCPU`          | `false`                         | Enable refreshing CPU_* variables.                    |
 | `EnableGPU`          | `false`                         | Enable refreshing GPU_* variables.                    |
@@ -600,10 +646,10 @@ These are read by the host but can also be overridden in your `.smd` config sect
 | `EnableGame`         | `false`                         | Enable refreshing Game_* variables.                   |
 | `LayerWidth`         | `448`                           | Overlay layer width.                                  |
 | `LayerHeight`        | `720`                           | Overlay layer height.                                 |
-| `HeaderText`         | `true`                          | Draw the title bar?                                   |
-| `FooterText`         | `true`                          | Draw the default footer?                              |
-| `UseCustomExitCombo` | `false`                         | Honour a custom exit combo from config file?          |
-| `EnableControls`     | `true`                          | Enable input for applets?                             |
+| `HeaderText`         | `true`                          | Draw the host's title bar?                            |
+| `FooterText`         | `true`                          | Draw the host's footer hint?                          |
+| `UseCustomExitCombo` | `false`                         | Honour a custom exit combo from `formattedKeyCombo`?  |
+| `EnableControls`     | `true`                          | Accept input events?                                  |
 
 ---
 

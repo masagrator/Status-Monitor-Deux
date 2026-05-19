@@ -137,11 +137,24 @@ public:
     bool LoadFromFile  (const char* path);
     bool LoadFromMemory(const char* data, size_t size);
 
+    // Set the callback used to query the host for the active IETF locale key.
+    // Call before LoadFromFile / LoadFromMemory. The callback and user pointer
+    // survive Free() so they do not need to be re-set between loads.
+    void SetRecordCallback(RecordCallback cb, void* user);
+
     // Cheap one-shot inspectors. Don't allocate a full Document::Impl.
-    static bool Peek          (const char* path, PeekInfo& out);
-    static bool PeekFromMemory(const char* data, size_t size, PeekInfo& out);
-    static bool PeekName          (const char* path, std::string& outName);
-    static bool PeekNameFromMemory(const char* data, size_t, std::string& outName);
+    // ietf_code: optional IETF locale key (e.g. "PL-PL"). When non-null and
+    // a matching NAME_LOCALE{} directive is present in the file, the
+    // localised name is returned instead of the default Name value.
+    static bool Peek          (const char* path, PeekInfo& out,
+                               const char* ietf_code = nullptr);
+    static bool PeekFromMemory(const char* data, size_t size, PeekInfo& out,
+                               const char* ietf_code = nullptr);
+    static bool PeekName          (const char* path, std::string& outName,
+                                   const char* ietf_code = nullptr);
+    static bool PeekNameFromMemory(const char* data, size_t size,
+                                   std::string& outName,
+                                   const char* ietf_code = nullptr);
 
     // Bind a host pointer for a predefined name. The pointer must outlive
     // the Document; the parser reads it every frame inside Evaluate().
