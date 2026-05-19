@@ -1,7 +1,5 @@
 // smd_parser.cpp
 // Implementation of the .smd parser & evaluator.
-// SMD file design by MasaGratoR
-// Implementation of parser was done mostly by Claude Opus 4.7 with tidbits of Sonnet 4.6
 
 #include "smd_parser.hpp"
 
@@ -22,6 +20,10 @@ extern "C" {
 #include <unordered_set>
 #include <vector>
 #include <switch.h>
+
+// Force everything in this block to be optimized for speed (O3)
+#pragma GCC push_options
+#pragma GCC optimize ("O3")
 
 namespace smd {
 
@@ -4791,3 +4793,5 @@ bool Document::FormatConfigString(const char* key, std::string& out) {
 }
 
 } // namespace smd
+
+#pragma GCC pop_options
