@@ -801,7 +801,10 @@ void GameThreadLoop(void* data) {
 			}
 			GameData.FPS_int = (NxFps -> FPS);
 			const size_t element_count = sizeof(NxFps->FPSticks) / sizeof(NxFps->FPSticks[0]);
+			#pragma GCC diagnostic push
+			#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 			float FPSavg_old = (float)systemtickfrequency / (std::accumulate<uint32_t*, float>(&NxFps->FPSticks[0], &NxFps->FPSticks[element_count], 0) / element_count);
+			#pragma GCC diagnostic pop
 			GameData.FpsAvgOld_float = FPSavg_old;
 			float FPS_in = (float)FPS;
 			float FPSavg;

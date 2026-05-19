@@ -41,8 +41,8 @@ APP_TITLE	:=	Status Monitor Deux
 APP_VERSION	:=	0.1.0
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source
-INCLUDES	:=	include lib/Atmosphere-libs/libstratosphere/source/dmnt lib/Atmosphere-libs/libstratosphere/source lib/libtesla/include
+SOURCES		:=	source source/Ext lib/tinyexpr
+INCLUDES	:=	include include/Ext lib/Atmosphere-libs/libstratosphere/source/dmnt lib/Atmosphere-libs/libstratosphere/source lib/libtesla/include lib/tinyexpr
 NO_ICON		:=	1
 #ROMFS		:=	romfs
 
@@ -51,7 +51,7 @@ NO_ICON		:=	1
 #---------------------------------------------------------------------------------
 ARCH		:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 
-CFLAGS	:=	-g -Wall -Werror -Wno-address-of-packed-member -O2 -ffunction-sections -ffast-math \
+CFLAGS	:=	-g -Wall -Werror -Os -ffunction-sections -fdata-sections -ffast-math \
 			$(ARCH) $(DEFINES)
 
 CFLAGS		+=	$(INCLUDE) -D__SWITCH__ -DAPP_VERSION="\"$(APP_VERSION)\"" -DAPP_TITLE="\"$(APP_TITLE)\""
