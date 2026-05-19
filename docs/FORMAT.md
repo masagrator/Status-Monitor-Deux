@@ -541,19 +541,25 @@ Available only with sys-clk or hoc-clk: `GPU_RealHz_int`, `GPU_DeltaHz_int`
 
 ### RAM
 `RAM_Hz_int`, `RAM_UsedAllMB_float`, `RAM_TotalAllMB_float`, `RAM_UsedApplicationMB_float`, `RAM_TotalApplicationMB_float`, `RAM_UsedAppletMB_float`, `RAM_TotalAppletMB_float`, `RAM_UsedSystemMB_float`, `RAM_TotalSystemMB_float`, `RAM_UsedSystemUnsafeMB_float`, `RAM_TotalSystemUnsafeMB_float`.
+
 Available only with sys-clk or hoc-clk:  `RAM_RealHz_int`, `RAM_DeltaHz_int`, `RAM_LoadAll_int`, `RAM_LoadCPU_int`
+
 Avaialble only with hoc-clk: `RAM_HocClkRamBWAll_int`, `RAM_HocClkRamBWCpu_int`, `RAM_HocClkRamBWGpu_int`, `RAM_HocClkRamBWPeak_int`
 
 ### Board
 `Board_ChargerCurrentLimit_int`, `Board_ChargerVoltageLimit_int`, `Board_ChargerConnected_int`, `Board_BatteryCurrentAvg_float`, `Board_BatteryVoltageAvg_float`, `Board_IsBatteryFiltered`, `Board_BatteryAgePercentage_float`, `Board_BatteryChargePercentage_float`, `Board_BatteryTemperatureCelcius_float`, `Board_DesignedFullBatteryCapacity_float`, `Board_ActualFullBatteryCapacity_float`, `Board_PowerConsumption_float`, `Board_BatteryTimeEstimateInMinutes_int`, `Board_SocTemperatureCelsius_float`, `Board_PcbTemperatureCelsius_float`, `Board_SkinTemperatureMiliCelsius_int`, `Board_FanRotationPercentageLevel_float`.
+
 Available only with hoc-clk: `Board_HocClkThermalSensorCPU_int`, `Board_HocClkThermalSensorGPU_int`, `Board_HocClkThermalSensorMEM_int`, `Board_HocClkThermalSensorPLLX_int`, `Board_HocClkThermalSensorAO_int`, `Board_HocClkThermalSensorBQ24193_int`
 
 ### Game
 Available only with SaltyNX
+
+
 `Game_LastFrameNumber_int`, `Game_IsGameRunning`, `Game_FPS_int`, `Game_FpsAvgOld_float`, `Game_FpsAvg_float`, `Game_ReadSpeedPerSecond_float`, `Game_ResolutionRenderCalls_int` (struct array of 8: `[N].width`/`.height`/`.calls`), `Game_ResolutionViewportCalls_int` (same shape).
 
 ### System
 `System_IsDocked`, `System_KeysDown_int`, `System_KeysHeld_int`, `formattedKeyCombo` (string).
+
 Available only with SaltyNX: `System_DisplayRefreshRate_int`
 
 ### Misc
