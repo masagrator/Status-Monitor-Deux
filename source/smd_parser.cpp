@@ -1,5 +1,7 @@
 // smd_parser.cpp
 // Implementation of the .smd parser & evaluator.
+// SMD file design by MasaGratoR
+// Implementation of parser was done mostly by Claude Opus 4.7 with tidbits of Sonnet 4.6
 
 #include "smd_parser.hpp"
 
