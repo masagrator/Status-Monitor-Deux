@@ -1,0 +1,114 @@
+;; Sample .smd file -- open this with the extension installed to see all
+;; the highlighted scopes at once.
+
+;; --- Constants (= separator: immutable, cannot be VAR'd) ---
+Name = Sample Overlay
+LayerWidth = 250
+LayerHeight = 150
+User_RefreshRate = 30
+
+User_GoodColor = COLOR{0x0F0F}     ; nibble-swapped: stored as 0xF0F0
+User_BadColor  = COLOR{0xF00F}     ; palindrome: 0xF00F
+ChartLine      = COLOR{0xFFFF}
+
+User_OldFpsAverage = false
+
+;; --- Live formats (: with re-evaluating Format spec) ---
+FpsLine: {"FPS: %d", Game_FPS_int}
+BatteryText: {"Battery: %.1f%%", Board_BatteryChargePercentage_float}
+
+;; --- HISTORY: only the declaration is `=`-protected; HISTORY_UPDATE
+;;     can still push samples. Three element types are supported.
+fpsHistory     = HISTORY{int,    120}
+fpsHistoryF    = HISTORY{float,   60}
+powerHistory   = HISTORY{double, 100}
+
+;; --- GRAPH_CONDITIONS row table: first matching cond wins per sample ---
+fpsConds: GRAPH_CONDITIONS{
+    {x >= 60, User_GoodColor, 0x0000},
+    {x >= 0,  User_BadColor,  0x0000}
+}
+
+;; --- LIST: typed arrays for #for loops ---
+Labels = LIST{str, {"CPU", "GPU", "RAM"}}
+Sizes  = LIST{int, RANGE{16, 33, 8}}   ; -> 16, 24, 32
+
+;; --- IETF localisation ---
+WarningText = IETF{"Game is not running or it's incompatible."}
+IETF_LOCALE{WarningText, "PL-PL", "Gra jest nieuruchomiona lub niekompatybilna."}
+IETF_LOCALE{WarningText, "DE-DE", "Das Spiel läuft nicht oder ist inkompatibel."}
+NAME_LOCALE{"PL-PL", "Monitor próbek"}
+
+;; --- hoc-clk exclusive variables ---
+;; (only non-zero when hoc-clk is active)
+;; RAM_HocClkRamBWAll_int  RAM_HocClkRamBWCpu_int
+;; RAM_HocClkRamBWGpu_int  RAM_HocClkRamBWPeak_int
+;; Board_HocClkThermalSensorCPU_int  Board_HocClkThermalSensorGPU_int
+;; Board_HocClkThermalSensorMEM_int
+
+;; --- State (: separator: mutable; persists across frames) ---
+lastFrame: 0
+
+Start:
+;; backdrop
+BOX{0, 0, LayerWidth, LayerHeight, BackgroundColor}
+
+;; rounded panel behind the chart
+ROUNDED_BOX{4, 4, LayerWidth - 8, 82, 0.15, 0.15, 0.15, 0.15, 0x2228}
+
+;; large FPS number, conditional color via ternary
+TEXT{8, 8, 28, Game_FPS_int >= 60 ? User_GoodColor : User_BadColor, FpsLine}
+
+;; sample once per game frame (uses cross-frame state idiom)
+#if $Game_IsGameRunning
+    #if $Game_LastFrameNumber_int > $lastFrame
+        HISTORY_UPDATE{fpsHistory, Game_FPS_int}
+        VAR{lastFrame, Game_LastFrameNumber_int}
+    #endif
+#elif $lastFrame > 0
+    ;; game stopped: clear history and reset state
+    HISTORY_CLEAN{fpsHistory}
+    VAR{lastFrame, 0}
+#endif
+
+;; HISTORY_AVERAGE: arithmetic mean of all current samples.
+;;   inline in a format spec:
+TEXT{8, 40, 14, 0xFFFF, {"Avg: %d fps", HISTORY_AVERAGE{fpsHistory}}}
+
+;;   via VAR first (reuse in condition + text):
+VAR{avgFps, HISTORY_AVERAGE{fpsHistory}}
+#if $avgFps < 30
+    TEXT{8, 56, 12, User_BadColor, "Rolling avg LOW"}
+#endif
+
+;;   in arithmetic: plot the deviation from target
+VAR{deviation, HISTORY_AVERAGE{fpsHistory} - System_DisplayRefreshRate_int}
+TEXT{8, 70, 12, 0xFFFF, {"Delta from target: %+d", deviation}}
+
+;; measure label width to right-align
+GET_DIMENSIONS{labelDims, 14, BatteryText}
+TEXT{LayerWidth - labelDims.x - 8, 8, 14, 0xFFFF, BatteryText}
+
+;; bottom: the graph, right-to-left
+GRAPH_LINE_CHART{8, 88, 234, 50, 0, 70, RIGHT_TO_LEFT,
+                 ChartLine, 0x0000, fpsConds, fpsHistory}
+
+;; IETF_GET: resolve a localised string at render time
+TEXT{8, 140, 10, 0x888F, IETF_GET{WarningText}}
+
+;; button-state demo: holding Y prints the WiFi passphrase
+#if $System_KeysHeld_int == System_Key_Y and $Misc_IsWiFiPassphrase
+    TEXT{8, 128, 12, 0xFFFF, Misc_WiFiPassphrase_str}
+#endif
+
+;; Comment showcase:
+;;   - identifier $foo                           (variable marker)
+;;   - builtin call:   round(Game_FpsAvg_float)  (function call)
+;;   - dotted access:  labelDims.x               (accessor)
+;;   - array slot:     Game_ResolutionRenderCalls_int[0].width
+;;   - string concat:  "label: " + FpsLine
+;;   - hoc-clk read:   RAM_HocClkRamBWAll_int
+;;   - HISTORY_AVERAGE used in #if:
+;;       #if HISTORY_AVERAGE{fpsHistory} > 55
+;;           TEXT{...}
+;;       #endif
