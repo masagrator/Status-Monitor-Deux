@@ -139,7 +139,7 @@ IETF_LOCALE{GpuUsageText,              "DE-DE", "GPU Auslastung:"}
 IETF_LOCALE{RamUsageText,              "DE-DE", "RAM Auslastung:"}
 IETF_LOCALE{BoardUsageText,            "DE-DE", "Platine:"}
 IETF_LOCALE{TemperatureText,           "DE-DE", "Temperaturen:"}
-IETF_LOCALE{ThermalSensorsText,        "DE-DE", "SOC \nPCB \nGehäuse"}
+IETF_LOCALE{ThermalSensorsText,        "DE-DE", "SOC \nPCB \nGehäuse "}
 IETF_LOCALE{GameText,                  "DE-DE", "Spiel:"}
 IETF_LOCALE{Resolutions1Text,          "DE-DE", "Auflösungen: %dx%d"}
 IETF_LOCALE{Resolutions2Text,          "DE-DE", "Auflösungen: %dx%d || %dx%d"}
