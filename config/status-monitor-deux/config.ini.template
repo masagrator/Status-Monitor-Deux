@@ -10,3 +10,4 @@ pro_controller_motion_key_combo=ZR+R+RSTICK
 jump_immediately_to_single_smd=true
 override_language=false
 override_language_ietf_code=EN-US
+key_combo_time_delay_ms=200

@@ -43,6 +43,7 @@ LocalTimeType LocalTime;
 std::unordered_map<std::string, std::string> locale;
 bool teslaCombo = false;
 bool ultrahandCombo = false;
+int64_t keyComboTimeDelay = 200'000'000;
 
 std::array<unsigned char, sizeof(impl_defaultLocale)> defaultLocale = std::to_array(impl_defaultLocale);
 
@@ -904,6 +905,7 @@ void createDefaultFile(std::string filepath) {
 	mkdir("sdmc:/config/", 69);
 	mkdir("sdmc:/config/status-monitor-deux/", 420);
 	setIniFile(filepath, "status-monitor-deux", ";key_combo", "L+DDOWN+RSTICK", "");
+	setIniFile(filepath, "status-monitor-deux", "key_combo_time_delay_ms", "200", "");
 	setIniFile(filepath, "status-monitor-deux", "battery_avg_iir_filter", "false", "");
 	setIniFile(filepath, "status-monitor-deux", "battery_time_left_refreshrate", "10", "");
 	setIniFile(filepath, "status-monitor-deux", "touch_screen", "true", "");
@@ -1075,6 +1077,23 @@ void ParseIniFile() {
 			else if (key.compare("override_language_ietf_code") == 0 && value.length() > 0) {
 				temp_overrideLanguage = value;
 				convertToUpper(temp_overrideLanguage);
+			}
+			else if (key.compare("key_combo_time_delay_ms") == 0 and value.length() > 0) {
+				constexpr uint64_t maxMiliseconds = 1000;
+				constexpr uint64_t minMiliseconds = 20;
+		
+				uint64_t rate;
+				auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), rate);
+
+				if (ec == std::errc{}) {
+					if (rate > maxMiliseconds) {
+						rate = maxMiliseconds;
+					}
+					else if (rate < minMiliseconds) {
+						rate = minMiliseconds;
+					}
+					keyComboTimeDelay = rate * 1'000'000;
+				}
 			}
 		}
 	}
