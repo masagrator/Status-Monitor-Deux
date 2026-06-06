@@ -77,9 +77,9 @@ public:
 				auto [maxSizeWidth, maxSizeHeight] = renderer->drawString(max_str.c_str(), false, 0, fontsize, fontsize, renderer->a(0x0000));
 				auto [rSizeWidth, rSizeHeight] = renderer->drawString("\uE0A5", false, 0, fontsize, fontsize, renderer->a(0x0000));
 				auto [lSizeWidth, lSizeHeight] = renderer->drawString("\uE0A4", false, 0, fontsize, fontsize, renderer->a(0x0000));
-				m_offset_l = (minSize.first - lSizeWidth) / 2;
+				m_offset_l = ((s32)minSize.first - (s32)lSizeWidth) / 2;
 				if (m_offset_l < 0) m_offset_l = 0;
-				m_offset_r = (maxSizeWidth - rSizeWidth) / 2;
+				m_offset_r = ((s32)maxSizeWidth - (s32)rSizeWidth) / 2;
 				if (m_offset_r < 0) m_offset_r = 0;
 				resetSize = renderer->drawString(reset_str.c_str(), false, 0, fontsize, fontsize, renderer->a(0x0000));
 			}
