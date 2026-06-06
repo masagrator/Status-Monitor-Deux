@@ -1,5 +1,6 @@
 Name = Battery/Charger
 NAME_LOCALE{"PL-PL", "Ładowarka/Bateria"}
+NAME_LOCALE{"DE-DE", "Akku/Ladegerät"}
 VERSION = 1
 
 Text01Format = IETF{"Battery Actual Capacity: %.0f mAh\n"}
@@ -32,7 +33,22 @@ IETF_LOCALE{Text12Format, "PL-PL", "Maksymalne natężenie ładowarki: %u mA\n"}
 IETF_LOCALE{Avg5s,        "PL-PL", " (śr. z 5s)"}
 IETF_LOCALE{Title,        "PL-PL", "Dane o baterii i ładowarce:"}
 
-EnableBoard = true ; powerConsumption_float, batTimeEstimateInMinutes_int, SOC_temperature_float, PCB_temperature_float, skin_temperaturemiliC_int, Rotation_Duty_float, actualFullBatCapacity_float, designedFullBatCapacity_float, temperature_celcius_float, battery_charge_percentage_float, battery_age_percentage_float, batVoltageAvg_float, batCurrentAvg_float, isBatteryFiltered, ChargerConnected_int, ChargerVoltageLimit_int, ChargerCurrentLimit_int 
+IETF_LOCALE{Text01Format, "DE-DE", "Tatsächliche Akku-Kapazität: %.0f mAh\n"}
+IETF_LOCALE{Text02Format, "DE-DE", "Akku-Nennkapazität: %.0f mAh\n"}
+IETF_LOCALE{Text03Format, "DE-DE", "Akku-Temperatur: %.1f°C\n"}
+IETF_LOCALE{Text04Format, "DE-DE", "Akku-Roh-Ladezustand: %.1f%%\n"}
+IETF_LOCALE{Text05Format, "DE-DE", "Akku-Alter: %.1f%%\n"}
+IETF_LOCALE{Text06Format, "DE-DE", "Akku-Spannung (%ds Durchschnitt): %.0f mV\n"}
+IETF_LOCALE{Text07Format, "DE-DE", "Akku-Stromfluss (%ss Durchschnitt): %+.0f mA\n"}
+IETF_LOCALE{Text08Format, "DE-DE", "Akku-Leistungsfluss%s: %+.3f W\n"}
+IETF_LOCALE{Text09Format, "DE-DE", "Akku-Restlaufzeit: %s\n"}
+IETF_LOCALE{Text10Format, "DE-DE", "Ladegerät-Typ: %u\n"}
+IETF_LOCALE{Text11Format, "DE-DE", "Ladegerät-Maximalspannung: %u mV\n"}
+IETF_LOCALE{Text12Format, "DE-DE", "Ladegerät-Maximalstrom: %u mA\n"}
+IETF_LOCALE{Avg5s,        "DE-DE", " (5s Durchschnitt)"}
+IETF_LOCALE{Title,        "DE-DE", "Akku-/Ladegerät-Statistiken:"}
+
+EnableBoard = true ; powerConsumption_float, batTimeEstimateInMinutes_int, SOC_temperature_float, PCB_temperature_float, skin_temperaturemiliC_int, Rotation_Duty_float, actualFullBatCapacity_float, designedFullBatCapacity_float, temperature_celcius_float, battery_charge_percentage_float, battery_age_percentage_float, batVoltageAvg_float, batCurrentAvg_float, isBatteryFiltered, ChargerConnected_int, ChargerVoltageLimit_int, ChargerCurrentLimit_int
 Text1: {IETF_GET{Text01Format}, Board_ActualFullBatteryCapacity_float}
 Text2: {IETF_GET{Text02Format}, Board_DesignedFullBatteryCapacity_float}
 Text3: {IETF_GET{Text03Format}, Board_BatteryTemperatureCelcius_float}
