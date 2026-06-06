@@ -42,7 +42,7 @@ Any additional service can be added by creating `.smse` file.
 > Currently implemented languages:
 > - American English
 > - Polish
-> - German (only for Main menu and Global settings)
+> - German
 >
 > If you want to add new language, send in issues those two translated files: [FILE 1](config/status-monitor-deux/locale.ini), [FILE 2](docs/toTranslate.ini)
 
