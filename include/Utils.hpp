@@ -209,6 +209,7 @@ extern LocalTimeType LocalTime;
 extern std::unordered_map<std::string, std::string> locale;
 extern bool teslaCombo;
 extern bool ultrahandCombo;
+extern int64_t keyComboTimeDelay;
 
 //Checks
 extern Result clkrstCheck;
