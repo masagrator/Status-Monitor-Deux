@@ -176,7 +176,7 @@ RotationText: {IETF_GET{FanRotationTextFormat}, Board_FanRotationPercentageLevel
 
 ;Game works only if SaltyNX was correctly initialized
 EnableGame = true
-FPSText: {"PFPS: %u; FPS: %2.1f", Game_FPS_int, User_OldFPSAverage ? Game_FPSAvgOld_float : Game_FPSAvg_float}
+FPSText: {"PFPS: %u; FPS: %2.1f", Game_FPS_int, User_OldFPSAverage ? Game_FpsAvgOld_float : Game_FpsAvg_float}
 FPSNoDataText = IETF_GET{FPSNDText}
 ReadSpeedText: {IETF_GET{ReadSpeedTextFormat}, Game_ReadSpeedPerSecond_float / 1048576}
 ReadSpeedUnkText = IETF_GET{ReadSpeedUnkTextFormat}
