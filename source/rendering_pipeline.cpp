@@ -718,7 +718,7 @@ bool RenderingPipeline::handleInput(uint64_t keysDown, uint64_t keysHeld, touchP
 					}
 				}
 			}
-			if (isKeyComboPressed(keysHeld, keysDown, mappedButtons, UseCustomExitCombo ? 200'000'000 : 20'000'000)) [[unlikely]] {
+			if (isKeyComboPressed(keysHeld, keysDown, mappedButtons, UseCustomExitCombo ? keyComboTimeDelay : 20'000'000)) [[unlikely]] {
 				tsl::goBack();
 				if (m_double_back == true) tsl::goBack();
 				return true;
