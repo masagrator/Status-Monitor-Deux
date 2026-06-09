@@ -189,7 +189,7 @@ BOX{0, 0, LayerWidth, fontsize+2, User_BoxColor}
 		VAR{DimensionsWholeText, DimensionsWholeText + GPUplaceholder}
 	#endif
 	#if $EnableRAM and $User_ShowRAM and $category == "RAM"
-		#if $RAM_LoadAll_int
+		#if $RAM_LoadAll_int and $User_ShowRAMLoad
 			VAR{DimensionsWholeText, DimensionsWholeText + RAMloadPlaceholder}
 		#else
 			VAR{DimensionsWholeText, DimensionsWholeText + RAMspacePlaceholder}
@@ -265,7 +265,7 @@ BOX{0, 0, LayerWidth, fontsize+2, User_BoxColor}
 		VAR{X_OFFSET, X_OFFSET + Dimensions2.x}
 	#endif
 	#if $EnableRAM and $User_ShowRAM and $category == "RAM"
-		#if $RAM_LoadAll_int
+		#if $RAM_LoadAll_int and $User_ShowRAMLoad
 			VAR{DimensionsText, RAMloadPlaceholder}
 		#else
 			VAR{DimensionsText, RAMspacePlaceholder}
