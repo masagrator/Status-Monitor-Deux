@@ -220,11 +220,11 @@ BOX{0, 0, LayerWidth, fontsize+2, User_BoxColor}
 		VAR{DimensionsText, CPUplaceholder}
 		VAR{Text, CPUpart1Text}
 		VAR{difference, "@"}
-		#if $CPU_DeltaHz_int > 20000
+		#if $CPU_DeltaHz_int > 20000000
 			VAR{difference, "△"}
-		#elif $CPU_DeltaHz_int < -50000
+		#elif $CPU_DeltaHz_int < -50000000
 			VAR{difference, "≠"}
-		#elif $CPU_DeltaHz_int < -20000
+		#elif $CPU_DeltaHz_int < -20000000
 			VAR{difference, "▽"}
 		#endif
 		VAR{Text, Text + difference}
@@ -244,11 +244,11 @@ BOX{0, 0, LayerWidth, fontsize+2, User_BoxColor}
 		VAR{GPU_DeltaHz_int, GPU_RealHz_int - GPU_Hz_int}
 		VAR{DimensionsText, GPUplaceholder}
 		VAR{difference, "@"}
-		#if $GPU_DeltaHz_int > 20000
+		#if $GPU_DeltaHz_int > 20000000
 			VAR{difference, "△"}
-		#elif $GPU_DeltaHz_int < -50000
+		#elif $GPU_DeltaHz_int < -50000000
 			VAR{difference, "≠"}
-		#elif $GPU_DeltaHz_int < -20000
+		#elif $GPU_DeltaHz_int < -20000000
 			VAR{difference, "▽"}
 		#endif
 		VAR{Text, GPUpart1Text + difference}
@@ -272,11 +272,11 @@ BOX{0, 0, LayerWidth, fontsize+2, User_BoxColor}
 		#endif
 		VAR{RAM_DeltaHz_int, RAM_RealHz_int - RAM_Hz_int}
 		VAR{difference, "@"}
-		#if $RAM_DeltaHz_int > 20000
+		#if $RAM_DeltaHz_int > 20000000
 			VAR{difference, "△"}
-		#elif $RAM_DeltaHz_int < -50000
+		#elif $RAM_DeltaHz_int < -50000000
 			VAR{difference, "≠"}
-		#elif $RAM_DeltaHz_int < -20000
+		#elif $RAM_DeltaHz_int < -20000000
 			VAR{difference, "▽"}
 		#endif
 		#if $RAM_LoadAll_int and $User_ShowRAMLoad
