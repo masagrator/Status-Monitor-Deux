@@ -1353,7 +1353,6 @@ namespace tsl {
 			
 			*/
 			inline void endFrame() {
-				std::memcpy(this->getNextFramebuffer(), this->getCurrentFramebuffer(), this->getFramebufferSize());
 				ApmPerformanceMode mode = ApmPerformanceMode_Invalid;
 				Result rc = apmGetPerformanceMode(&mode);
 				if (R_SUCCEEDED(rc)) {
