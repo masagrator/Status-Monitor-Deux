@@ -118,6 +118,7 @@ struct SmseCommandDesc {
     u32           cmdId;
     SmseValueType outputType;         // for non-buffer commands
     bool          isBuffer  = false;
+    bool          isInlineStruct = false;
     size_t        bufSize   = 0;
     bool          bufIsChar = false;
     std::string   bufStructName;      // only when !bufIsChar

@@ -216,15 +216,17 @@ static ParseResult parseFile(const std::string& path) {
             }
 
             std::string_view typeStr = parts[2];
-            if (typeStr == "buffer") {
-                cmd.isBuffer = true;
+            if (typeStr == "buffer" || typeStr == "struct") {
+                cmd.isBuffer = (typeStr == "buffer");
+                cmd.isInlineStruct = (typeStr == "struct");
+                
                 if (parts.size() < 5)
                     return SmseError::make(SmseErrorCode::ParseMalformedLine,
-                                           path, fmt("Bad buffer cmd: %s", std::string(line).c_str()));
+                                           path, fmt("Bad complex cmd: %s", std::string(line).c_str()));
                 auto bsz = parseNum(parts[3]);
                 if (!bsz)
                     return SmseError::make(SmseErrorCode::ParseMalformedLine,
-                                           path, fmt("Bad buffer size: %s", std::string(parts[3]).c_str()));
+                                           path, fmt("Bad size: %s", std::string(parts[3]).c_str()));
                 cmd.bufSize = *bsz;
 
                 std::string_view bufType = trim(parts[4]);
@@ -234,7 +236,7 @@ static ParseResult parseFile(const std::string& path) {
                     cmd.bufStructName = std::string(trim(bufType.substr(7)));
                 } else {
                     return SmseError::make(SmseErrorCode::ParseUnknownType,
-                                           path, fmt("Unknown buffer type: %s", std::string(bufType).c_str()));
+                                           path, fmt("Unknown complex type: %s", std::string(bufType).c_str()));
                 }
                 // Validate / register struct size
                 if (!cmd.bufIsChar) {
@@ -290,7 +292,7 @@ static ParseResult parseFile(const std::string& path) {
             }
 
             // 2. Check if the command outputs a char buffer (string)
-            bool isString = cmdIt->isBuffer && cmdIt->bufIsChar;
+            bool isString = (cmdIt->isBuffer || cmdIt->isInlineStruct) && cmdIt->bufIsChar;
 
             if (isString) {
                 // -- String / Regex Assertions --

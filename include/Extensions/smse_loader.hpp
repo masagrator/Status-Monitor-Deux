@@ -83,17 +83,17 @@ inline std::size_t safe_strlen(const char* buf, std::size_t max_size) {
 
 struct SmseFieldAccessor {
     SmseValueType srcType;
-    const void*   ptr;
+    const void* ptr;
 
     bool isInt()    const noexcept { return isIntType(srcType); }
     bool isFloat()  const noexcept { return srcType == SmseValueType::f32_; }
     bool isDouble() const noexcept { return srcType == SmseValueType::f64_; }
     bool isString() const noexcept { return srcType == SmseValueType::buffer_char; }
 
-    const s64*    intPtr() const noexcept { return static_cast<const s64*>(ptr); }
-    const float*  f32Ptr() const noexcept { return static_cast<const float*>(ptr); }
+    const s64* intPtr() const noexcept { return static_cast<const s64*>(ptr); }
+    const float* f32Ptr() const noexcept { return static_cast<const float*>(ptr); }
     const double* f64Ptr() const noexcept { return static_cast<const double*>(ptr); }
-    const char*   strPtr() const noexcept { return static_cast<const char*>(ptr); }
+    const char* strPtr() const noexcept { return static_cast<const char*>(ptr); }
 
     s64         asInt()    const noexcept { return *intPtr(); }
     float       asFloat()  const noexcept { return *f32Ptr(); }
@@ -174,7 +174,7 @@ struct SmseScalarSlot {
 
 struct SmseServiceRuntime {
     std::string  serviceName;
-    Service*     svc = nullptr;
+    Service* svc = nullptr;
 
     std::unordered_map<u32,         SmseCommandDesc> cmds;
     std::unordered_map<std::string, SmseStructDesc>  structs;
@@ -261,12 +261,6 @@ public:
             rt.svc = &existing->service;
 
             // --- Per-file: assert first, merge only on full pass ---
-            //
-            // Asserts run against the file's own cmd list (rt.cmds is still
-            // empty at this point; we haven't merged anything yet).
-            // Only if every assert in a file passes do we fold that file's
-            // cmds / structs / exec entries into the runtime.
-            // A failure in one file has zero effect on other files.
             for (auto* pf : files) {
                 std::vector<SmseError> fileErrors;
 
@@ -303,7 +297,7 @@ public:
 
             // --- Allocate output slots (pointers stable from here on) ---
             for (auto& [cmdId, cmd] : rt.cmds) {
-                if (cmd.isBuffer) {
+                if (cmd.isBuffer || cmd.isInlineStruct) {
                     auto& slot = rt.bufferOutputs[cmd.name];
                     slot.rawData.resize(cmd.bufSize, 0);
                     slot.isChar = cmd.bufIsChar;
@@ -337,7 +331,7 @@ public:
             // Struct fields
             for (auto& [sname, sd] : rt.structs) {
                 for (auto& [cmdId, cmd] : rt.cmds) {
-                    if (!cmd.isBuffer || cmd.bufIsChar) continue;
+                    if (!(cmd.isBuffer || cmd.isInlineStruct) || cmd.bufIsChar) continue;
                     if (cmd.bufStructName != sname) continue;
                     auto it = rt.bufferOutputs.find(cmd.name);
                     if (it == rt.bufferOutputs.end()) continue;
@@ -358,7 +352,7 @@ public:
             // Scalar exec outputs
             for (auto& execName : rt.execOrder) {
                 for (auto& [cmdId, cmd] : rt.cmds) {
-                    if (cmd.name != execName || cmd.isBuffer) continue;
+                    if (cmd.name != execName || cmd.isBuffer || cmd.isInlineStruct) continue;
                     auto it = rt.scalarOutputs.find(cmd.name);
                     if (it == rt.scalarOutputs.end()) break;
                     _allVars.push_back({ cmd.name, svcName,
@@ -370,7 +364,7 @@ public:
             // Char-buffer exec outputs
             for (auto& execName : rt.execOrder) {
                 for (auto& [cmdId, cmd] : rt.cmds) {
-                    if (cmd.name != execName || !cmd.isBuffer || !cmd.bufIsChar) continue;
+                    if (cmd.name != execName || !(cmd.isBuffer || cmd.isInlineStruct) || !cmd.bufIsChar) continue;
                     auto it = rt.bufferOutputs.find(cmd.name);
                     if (it == rt.bufferOutputs.end()) break;
                     _allVars.push_back({ cmd.name, svcName,
@@ -415,10 +409,10 @@ private:
         for (auto& [cmdId, cmd] : rt.cmds) {
             if (cmd.name != cmdName) continue;
             Result rc;
-            if (cmd.isBuffer) {
+            if (cmd.isBuffer || cmd.isInlineStruct) {
                 auto& slot = rt.bufferOutputs[cmd.name];
                 rc = serviceCall(rt.svc, cmd.cmdId,
-                                 slot.rawData.data(), slot.rawData.size(), true);
+                                 slot.rawData.data(), slot.rawData.size(), cmd.isBuffer);
                 if (R_SUCCEEDED(rc)) slot.convert();
             } else {
                 auto& slot = rt.scalarOutputs[cmd.name];
@@ -439,8 +433,6 @@ private:
             fmt("Exec command '%s' not found in cmds", cmdName.c_str())));
     }
 
-    // Runs asserts using the cmd list from the file itself, not the merged runtime.
-    // This is intentional: we haven't merged this file's data yet and might not.
     SmseError _runAssertFromFile(const SmseParsedFile& pf, Service* svc,
                                   const SmseAssertDesc& asrt, const std::string& src)
     {
@@ -456,9 +448,9 @@ private:
                             asrt.op != SmseAssertOp::NE_REGEX);
 
         if (isNumericOp) {
-            if (cmd->isBuffer)
+            if (cmd->isBuffer || cmd->isInlineStruct)
                 return SmseError::make(SmseErrorCode::AssertBadOutputType, src,
-                    fmt("Assert numeric op on buffer cmd '%s'", asrt.cmdName.c_str()));
+                    fmt("Assert numeric op on complex cmd '%s'", asrt.cmdName.c_str()));
 
             u64 tmp = 0;
             Result rc = serviceCall(svc, cmd->cmdId, &tmp,
@@ -487,12 +479,12 @@ private:
                         asrt.cmdName.c_str(), (long long)val,
                         opStr, (long long)expected));
         } else {
-            if (!cmd->isBuffer || !cmd->bufIsChar)
+            if (!(cmd->isBuffer || cmd->isInlineStruct) || !cmd->bufIsChar)
                 return SmseError::make(SmseErrorCode::AssertBadOutputType, src,
                     fmt("Assert regex on non-char cmd '%s'", asrt.cmdName.c_str()));
 
             std::vector<u8> tmp(cmd->bufSize, 0);
-            Result rc = serviceCall(svc, cmd->cmdId, tmp.data(), tmp.size(), true);
+            Result rc = serviceCall(svc, cmd->cmdId, tmp.data(), tmp.size(), cmd->isBuffer);
             if (R_FAILED(rc))
                 return SmseError::make(SmseErrorCode::ExecCommandFailed, src,
                     fmt("Assert call '%s' failed", asrt.cmdName.c_str()), rc);
