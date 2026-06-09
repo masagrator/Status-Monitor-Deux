@@ -148,14 +148,14 @@ IETF_LOCALE{Resolutions2Text,          "DE-DE", "Auflösungen: %dx%d || %dx%d"}
 EnableCPU = true
 CPUTargetFreqText: {IETF_GET{TargetFreqTextFormat}, CPU_Hz_int / 1000000, (CPU_Hz_int / 100000) % 10}
 CPURealFreqText: {IETF_GET{RealFreqTextFormat}, CPU_RealHz_int / 1000000, (CPU_RealHz_int / 100000) % 10}
-CPUdeltaText: {"Δ %d.%u", CPU_DeltaHz_int / 1000000, abs(CPU_DeltaHz_int / 100000) % 10}
+CPUdeltaText: {"Δ %d.%u", (CPU_RealHz_int - CPU_Hz_int) / 1000000, abs((CPU_RealHz_int - CPU_Hz_int) / 100000) % 10}
 CPUloadText: {IETF_GET{CPULoadTextFormat}, CPU_Core0Load_double, CPU_Core1Load_double, CPU_Core2Load_double, CPU_Core3Load_double}
 
 ; GPU works only if nv + "clkrst or pcv" was correctly initialized, realGPU_Hz_int is always 0 when hoc:clk or sys:clk is not detected
 EnableGPU = true
 GPUTargetFreqText: {IETF_GET{TargetFreqTextFormat}, GPU_Hz_int / 1000000, (GPU_Hz_int / 100000) % 10}
 GPURealFreqText: {IETF_GET{RealFreqTextFormat}, GPU_RealHz_int / 1000000, (GPU_RealHz_int / 100000) % 10}
-GPUdeltaText: {"Δ %d.%u", GPU_DeltaHz_int / 1000000, abs(GPU_DeltaHz_int / 100000) % 10}
+GPUdeltaText: {"Δ %d.%u", (GPU_RealHz_int - GPU_Hz_int) / 1000000, abs((GPU_RealHz_int - GPU_Hz_int) / 100000) % 10}
 GPUloadText: {IETF_GET{GPULoadTextFormat}, GPU_Load_int / 10, GPU_Load_int % 10}
 
 ; RAM works only if clkrst or pcv was correctly initialized + sysmodule correctly reports that SVC 0x6F is available
@@ -163,7 +163,7 @@ GPUloadText: {IETF_GET{GPULoadTextFormat}, GPU_Load_int / 10, GPU_Load_int % 10}
 EnableRAM = true
 RAMTargetFreqText: {IETF_GET{TargetFreqTextFormat}, RAM_Hz_int / 1000000, (RAM_Hz_int / 100000) % 10}
 RAMRealFreqText: {IETF_GET{RealFreqTextFormat}, RAM_RealHz_int / 1000000, (RAM_RealHz_int / 100000) % 10}
-RAMdeltaText: {"Δ %d.%u", RAM_DeltaHz_int / 1000000, abs(RAM_DeltaHz_int / 100000) % 10}
+RAMdeltaText: {"Δ %d.%u", (RAM_RealHz_int - RAM_Hz_int) / 1000000, abs((RAM_RealHz_int - RAM_Hz_int) / 100000) % 10}
 RAMloadText: {IETF_GET{RAMLoadTextFormat}, RAM_LoadAll_int / 10, RAM_LoadAll_int % 10, RAM_LoadCPU_int / 10, RAM_LoadCPU_int % 10, (RAM_LoadAll_int - RAM_LoadCPU_int) / 10, (RAM_LoadAll_int - RAM_LoadCPU_int) % 10}
 RAMusageBaseText = IETF_GET{RAMUsageBaseTextFormat}
 RAMusageText: {"%4.2f / %4.2f MB\n%4.2f / %4.2f MB\n%4.2f / %4.2f MB\n%4.2f / %4.2f MB\n%4.2f / %4.2f MB", RAM_UsedAllMB_float, RAM_TotalAllMB_float, RAM_UsedApplicationMB_float, RAM_TotalApplicationMB_float, RAM_UsedAppletMB_float, RAM_TotalAppletMB_float, RAM_UsedSystemMB_float, RAM_TotalSystemMB_float, RAM_UsedSystemUnsafeMB_float, RAM_TotalSystemUnsafeMB_float}
