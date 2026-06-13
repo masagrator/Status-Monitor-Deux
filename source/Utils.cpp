@@ -524,7 +524,12 @@ void GameThreadLoop(void* data) {
 			qsort(m_resolutionRenderCalls, 8, sizeof(resolutionCalls), compare);
 			qsort(m_resolutionViewportCalls, 8, sizeof(resolutionCalls), compare);
 			memcpy(&GameData.ResolutionRenderCalls_int, &m_resolutionRenderCalls, sizeof(m_resolutionRenderCalls));
-			memcpy(&GameData.ResolutionViewportCalls_int, &m_resolutionViewportCalls, sizeof(m_resolutionViewportCalls));		
+			memcpy(&GameData.ResolutionViewportCalls_int, &m_resolutionViewportCalls, sizeof(m_resolutionViewportCalls));
+			memcpy(&GameData.NVN, &NxFps->NVN, 0x78);
+			GameData.NVN.tilesProcessedByZcull_int = NxFps->NVN.tilesProcessedByZcull;
+			GameData.NVN.pixelBlocksBehindPrimitivesAndCulled_int = NxFps->NVN.pixelBlocksBehindPrimitivesAndCulled;
+			GameData.NVN.pixelBlocksInFrontOfPrimitivesCulled_int = NxFps->NVN.pixelBlocksInFrontOfPrimitivesCulled;
+			GameData.NVN.pixelBlocksFailedStencilTestAndCulled_int = NxFps->NVN.pixelBlocksFailedStencilTestAndCulled;
 		}
 		else {
 			GameData.FpsAvg_float = 254.f;
