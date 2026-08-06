@@ -13,7 +13,7 @@ Any additional service can be added by creating `.smse` file.
 # Data shown in included SMD files
 - CPU Usage for each core (Cores `#0`-`#2` are used by apps/games, Core `#3` is used by OS, background processes and also Tesla overlays)
 - GPU Load
-- CPU, GPU & RAM target frequencies (also real frequencies + RAM Load if [sys-clk 2.0.0_rc4+](https://github.com/retronx-team/sys-clk/releases) or [Horizon OC 2.2.0+](https://github.com/Horizon-OC/Horizon-OC/releases) is installed, use only official RetroNX release for reliable results)
+- CPU, GPU & RAM target frequencies (also real frequencies + RAM Load if [sys-clk 2.0.0_rc4+](https://github.com/retronx-team/sys-clk/releases) or [Horizon OC 2.2.0+](https://github.com/Horizon-OC/Horizon-OC/releases) is installed, use only official releases for reliable results)
 - Used RAM categorized to: (not supported by FWs <5.0.0)
   - Total
   - Application
