@@ -63,33 +63,54 @@ struct NxFpsSharedBlock {
 	uint8_t FPSlockedDocked;
 	uint64_t frameNumber;
 	int8_t expectedSetBuffers;
+	struct {
+		uint64_t timestamp;
+		uint64_t samplesPassed;
+		uint64_t inputVertices;
+		uint64_t inputPrimitives;
+		uint64_t vertexShaderInvocations;
+		uint64_t tessControlShaderInvocations;
+		uint64_t tessEvaluationShaderInvocations;
+		uint64_t geometryShaderInvocations;
+		uint64_t fragmentShaderInvocations;
+		uint64_t tessEvaluationShaderPrimitives;
+		uint64_t geometryShaderPrimitives;
+		uint64_t clipperInputPrimitives;
+		uint64_t clipperOutputPrimitives;
+		uint64_t primitivesGenerated;
+		uint64_t transformFeedbackPrimitivesWritten;
+		uint32_t tilesProcessedByZcull;
+		uint32_t pixelBlocksBehindPrimitivesAndCulled;
+		uint32_t pixelBlocksInFrontOfPrimitivesCulled;
+		uint32_t pixelBlocksFailedStencilTestAndCulled;
+	} NVN;
 } NX_PACKED;
 
-static_assert(sizeof(NxFpsSharedBlock) == 174);
+static_assert(sizeof(NxFpsSharedBlock) == 310);
 
 typedef struct {
-    u8 ssid_len;                                         ///< NifmSfWirelessSettingData::ssid_len
-    char ssid[0x21];                                     ///< NifmSfWirelessSettingData::ssid
-    u8 unk_x22;                                          ///< NifmSfWirelessSettingData::unk_x21
-    u8 pad;                                              ///< Padding
-    u32 unk_x24;                                         ///< NifmSfWirelessSettingData::unk_x22
-    u32 unk_x28;                                         ///< NifmSfWirelessSettingData::unk_x23
-    u8 passphrase_len;                                   ///< Passphrase length
-    u8 passphrase[0x41];                                 ///< NifmSfWirelessSettingData::passphrase
-    u8 pad2[0x2];                                        ///< Padding
+	u8 ssid_len;                                         ///< NifmSfWirelessSettingData::ssid_len
+	char ssid[0x21];                                     ///< NifmSfWirelessSettingData::ssid
+	u8 unk_x22;                                          ///< NifmSfWirelessSettingData::unk_x21
+	u8 pad;                                              ///< Padding
+	u32 unk_x24;                                         ///< NifmSfWirelessSettingData::unk_x22
+	u32 unk_x28;                                         ///< NifmSfWirelessSettingData::unk_x23
+	u8 passphrase_len;                                   ///< Passphrase length
+	u8 passphrase[0x41];                                 ///< NifmSfWirelessSettingData::passphrase
+	u8 pad2[0x2];                                        ///< Padding
 } NifmWirelessSettingData_new;
 
 /// NetworkProfileData. Converted from/to \ref NifmSfNetworkProfileData.
 typedef struct {
-    Uuid uuid;                                           ///< NifmSfNetworkProfileData::uuid
-    char network_name[0x40];                             ///< NifmSfNetworkProfileData::network_name
-    u32 unk_x50;                                         ///< NifmSfNetworkProfileData::unk_x112
-    u32 unk_x54;                                         ///< NifmSfNetworkProfileData::unk_x113
-    u8 unk_x58;                                          ///< NifmSfNetworkProfileData::unk_x114
-    u8 unk_x59;                                          ///< NifmSfNetworkProfileData::unk_x115
-    u8 pad[2];                                           ///< Padding
-    NifmWirelessSettingData_new wireless_setting_data;   ///< \ref NifmWirelessSettingData
-    NifmIpSettingData ip_setting_data;                   ///< \ref NifmIpSettingData
+	Uuid uuid;                                           ///< NifmSfNetworkProfileData::uuid
+	char network_name[0x40];                             ///< NifmSfNetworkProfileData::network_name
+	u32 unk_x50;                                         ///< NifmSfNetworkProfileData::unk_x112
+	u32 unk_x54;                                         ///< NifmSfNetworkProfileData::unk_x113
+	u8 unk_x58;                                          ///< NifmSfNetworkProfileData::unk_x114
+	u8 unk_x59;                                          ///< NifmSfNetworkProfileData::unk_x115
+	u8 pad[2];                                           ///< Padding
+	NifmWirelessSettingData_new wireless_setting_data;   ///< \ref NifmWirelessSettingData
+	NifmIpSettingData ip_setting_data;                   ///< \ref NifmIpSettingData
 } NifmNetworkProfileData_new;
 
 // Named struct types for global data variables
@@ -156,6 +177,27 @@ struct GameDataType {
 	float ReadSpeedPerSecond_float;
 	smd::ResolutionEntry ResolutionRenderCalls_int[8];
 	smd::ResolutionEntry ResolutionViewportCalls_int[8];
+	struct {
+		int64_t timestamp_int;
+		int64_t samplesPassed_int;
+		int64_t inputVertices_int;
+		int64_t inputPrimitives_int;
+		int64_t vertexShaderInvocations_int;
+		int64_t tessControlShaderInvocations_int;
+		int64_t tessEvaluationShaderInvocations_int;
+		int64_t geometryShaderInvocations_int;
+		int64_t fragmentShaderInvocations_int;
+		int64_t tessEvaluationShaderPrimitives_int;
+		int64_t geometryShaderPrimitives_int;
+		int64_t clipperInputPrimitives_int;
+		int64_t clipperOutputPrimitives_int;
+		int64_t primitivesGenerated_int;
+		int64_t transformFeedbackPrimitivesWritten_int;
+		int64_t tilesProcessedByZcull_int;
+		int64_t pixelBlocksBehindPrimitivesAndCulled_int;
+		int64_t pixelBlocksInFrontOfPrimitivesCulled_int;
+		int64_t pixelBlocksFailedStencilTestAndCulled_int;
+	} NVN;
 };
 
 struct SystemDataType {
@@ -240,53 +282,72 @@ static constexpr unsigned char impl_defaultLocale[] = {
 extern std::array<unsigned char, sizeof(impl_defaultLocale)> defaultLocale;
 
 inline void BindAllPredefined(smd::Document& doc) {
-    doc.BindInt64 ("CPU_Hz_int",                          		&CpuData.Hz_int);
-    doc.BindDouble("CPU_Core0Load_double",                		&CpuData.Core0Load_double);
-    doc.BindDouble("CPU_Core1Load_double",                		&CpuData.Core1Load_double);
-    doc.BindDouble("CPU_Core2Load_double",                		&CpuData.Core2Load_double);
-    doc.BindDouble("CPU_Core3Load_double",                		&CpuData.Core3Load_double);
-    doc.BindInt64 ("GPU_Hz_int",                          		&GpuData.Hz_int);
-    doc.BindInt64 ("GPU_Load_int",                        		&GpuData.Load_int);
-    doc.BindInt64 ("RAM_Hz_int",                          		&RamData.Hz_int);
-    doc.BindFloat ("RAM_UsedAllMB_float",                 		&RamData.UsedAllMB_float);
-    doc.BindFloat ("RAM_TotalAllMB_float",                		&RamData.TotalAllMB_float);
-    doc.BindFloat ("RAM_UsedApplicationMB_float",         		&RamData.UsedApplicationMB_float);
-    doc.BindFloat ("RAM_TotalApplicationMB_float",        		&RamData.TotalApplicationMB_float);
-    doc.BindFloat ("RAM_UsedAppletMB_float",              		&RamData.UsedAppletMB_float);
-    doc.BindFloat ("RAM_TotalAppletMB_float",             		&RamData.TotalAppletMB_float);
-    doc.BindFloat ("RAM_UsedSystemMB_float",              		&RamData.UsedSystemMB_float);
-    doc.BindFloat ("RAM_TotalSystemMB_float",             		&RamData.TotalSystemMB_float);
-    doc.BindFloat ("RAM_UsedSystemUnsafeMB_float",        		&RamData.UsedSystemUnsafeMB_float);
-    doc.BindFloat ("RAM_TotalSystemUnsafeMB_float",       		&RamData.TotalSystemUnsafeMB_float);
-    doc.BindInt64 ("Board_ChargerCurrentLimit_int",       		&BoardData.ChargerCurrentLimit_int);
-    doc.BindInt64 ("Board_ChargerVoltageLimit_int",       		&BoardData.ChargerVoltageLimit_int);
-    doc.BindInt64 ("Board_ChargerConnected_int",          		&BoardData.ChargerConnected_int);
-    doc.BindFloat ("Board_BatteryCurrentAvg_float",       		&BoardData.BatteryCurrentAvg_float);
-    doc.BindFloat ("Board_BatteryVoltageAvg_float",       		&BoardData.BatteryVoltageAvg_float);
-    doc.BindBool  ("Board_IsBatteryFiltered",             		&BoardData.IsBatteryFiltered);
-    doc.BindFloat ("Board_BatteryAgePercentage_float",    		&BoardData.BatteryAgePercentage_float);
-    doc.BindFloat ("Board_BatteryChargePercentage_float", 		&BoardData.BatteryChargePercentage_float);
-    doc.BindFloat ("Board_BatteryTemperatureCelcius_float", 	&BoardData.BatteryTemperatureCelcius_float);
-    doc.BindFloat ("Board_DesignedFullBatteryCapacity_float", 	&BoardData.DesignedFullBatteryCapacity_float);
-    doc.BindFloat ("Board_ActualFullBatteryCapacity_float", 	&BoardData.ActualFullBatteryCapacity_float);
-    doc.BindFloat ("Board_PowerConsumption_float",        		&BoardData.PowerConsumption_float);
-    doc.BindInt64 ("Board_BatteryTimeEstimateInMinutes_int",	&BoardData.BatteryTimeEstimateInMinutes_int);
-    doc.BindFloat ("Board_SocTemperatureCelsius_float",   		&BoardData.SocTemperatureCelsius_float);
-    doc.BindFloat ("Board_PcbTemperatureCelsius_float",   		&BoardData.PcbTemperatureCelsius_float);
-    doc.BindInt64 ("Board_SkinTemperatureMiliCelsius_int", 		&BoardData.SkinTemperatureMiliCelsius_int);
-    doc.BindFloat ("Board_FanRotationPercentageLevel_float",	&BoardData.FanRotationPercentageLevel_float);
-    doc.BindInt64 ("Game_LastFrameNumber_int",            		&GameData.LastFrameNumber_int);
-    doc.BindBool  ("Game_IsGameRunning",                  		&GameData.IsGameRunning);
-    doc.BindInt64 ("Game_FPS_int",                        		&GameData.FPS_int);
-    doc.BindFloat ("Game_FpsAvgOld_float",                		&GameData.FpsAvgOld_float);
-    doc.BindFloat ("Game_FpsAvg_float",                   		&GameData.FpsAvg_float);
-    doc.BindFloat ("Game_ReadSpeedPerSecond_float",       		&GameData.ReadSpeedPerSecond_float);
-    doc.BindResolutionArray("Game_ResolutionRenderCalls_int",   GameData.ResolutionRenderCalls_int);
-    doc.BindResolutionArray("Game_ResolutionViewportCalls_int", GameData.ResolutionViewportCalls_int);
-    doc.BindInt64 ("System_DisplayRefreshRate_int",       		&SystemData.DisplayRefreshRate_int);
-    doc.BindBool  ("System_IsDocked",                     		&SystemData.IsDocked);
-    doc.BindInt64 ("System_KeysDown_int",                 		&SystemData.KeysDown_int);
-    doc.BindInt64 ("System_KeysHeld_int",                 		&SystemData.KeysHeld_int);
+	doc.BindInt64 ("CPU_Hz_int",                          		&CpuData.Hz_int);
+	doc.BindDouble("CPU_Core0Load_double",                		&CpuData.Core0Load_double);
+	doc.BindDouble("CPU_Core1Load_double",                		&CpuData.Core1Load_double);
+	doc.BindDouble("CPU_Core2Load_double",                		&CpuData.Core2Load_double);
+	doc.BindDouble("CPU_Core3Load_double",                		&CpuData.Core3Load_double);
+	doc.BindInt64 ("GPU_Hz_int",                          		&GpuData.Hz_int);
+	doc.BindInt64 ("GPU_Load_int",                        		&GpuData.Load_int);
+	doc.BindInt64 ("RAM_Hz_int",                          		&RamData.Hz_int);
+	doc.BindFloat ("RAM_UsedAllMB_float",                 		&RamData.UsedAllMB_float);
+	doc.BindFloat ("RAM_TotalAllMB_float",                		&RamData.TotalAllMB_float);
+	doc.BindFloat ("RAM_UsedApplicationMB_float",         		&RamData.UsedApplicationMB_float);
+	doc.BindFloat ("RAM_TotalApplicationMB_float",        		&RamData.TotalApplicationMB_float);
+	doc.BindFloat ("RAM_UsedAppletMB_float",              		&RamData.UsedAppletMB_float);
+	doc.BindFloat ("RAM_TotalAppletMB_float",             		&RamData.TotalAppletMB_float);
+	doc.BindFloat ("RAM_UsedSystemMB_float",              		&RamData.UsedSystemMB_float);
+	doc.BindFloat ("RAM_TotalSystemMB_float",             		&RamData.TotalSystemMB_float);
+	doc.BindFloat ("RAM_UsedSystemUnsafeMB_float",        		&RamData.UsedSystemUnsafeMB_float);
+	doc.BindFloat ("RAM_TotalSystemUnsafeMB_float",       		&RamData.TotalSystemUnsafeMB_float);
+	doc.BindInt64 ("Board_ChargerCurrentLimit_int",       		&BoardData.ChargerCurrentLimit_int);
+	doc.BindInt64 ("Board_ChargerVoltageLimit_int",       		&BoardData.ChargerVoltageLimit_int);
+	doc.BindInt64 ("Board_ChargerConnected_int",          		&BoardData.ChargerConnected_int);
+	doc.BindFloat ("Board_BatteryCurrentAvg_float",       		&BoardData.BatteryCurrentAvg_float);
+	doc.BindFloat ("Board_BatteryVoltageAvg_float",       		&BoardData.BatteryVoltageAvg_float);
+	doc.BindBool  ("Board_IsBatteryFiltered",             		&BoardData.IsBatteryFiltered);
+	doc.BindFloat ("Board_BatteryAgePercentage_float",    		&BoardData.BatteryAgePercentage_float);
+	doc.BindFloat ("Board_BatteryChargePercentage_float", 		&BoardData.BatteryChargePercentage_float);
+	doc.BindFloat ("Board_BatteryTemperatureCelcius_float", 	&BoardData.BatteryTemperatureCelcius_float);
+	doc.BindFloat ("Board_DesignedFullBatteryCapacity_float", 	&BoardData.DesignedFullBatteryCapacity_float);
+	doc.BindFloat ("Board_ActualFullBatteryCapacity_float", 	&BoardData.ActualFullBatteryCapacity_float);
+	doc.BindFloat ("Board_PowerConsumption_float",        		&BoardData.PowerConsumption_float);
+	doc.BindInt64 ("Board_BatteryTimeEstimateInMinutes_int",	&BoardData.BatteryTimeEstimateInMinutes_int);
+	doc.BindFloat ("Board_SocTemperatureCelsius_float",   		&BoardData.SocTemperatureCelsius_float);
+	doc.BindFloat ("Board_PcbTemperatureCelsius_float",   		&BoardData.PcbTemperatureCelsius_float);
+	doc.BindInt64 ("Board_SkinTemperatureMiliCelsius_int", 		&BoardData.SkinTemperatureMiliCelsius_int);
+	doc.BindFloat ("Board_FanRotationPercentageLevel_float",	&BoardData.FanRotationPercentageLevel_float);
+	doc.BindInt64 ("Game_LastFrameNumber_int",            		&GameData.LastFrameNumber_int);
+	doc.BindBool  ("Game_IsGameRunning",                  		&GameData.IsGameRunning);
+	doc.BindInt64 ("Game_FPS_int",                        		&GameData.FPS_int);
+	doc.BindFloat ("Game_FpsAvgOld_float",                		&GameData.FpsAvgOld_float);
+	doc.BindFloat ("Game_FpsAvg_float",                   		&GameData.FpsAvg_float);
+	doc.BindFloat ("Game_ReadSpeedPerSecond_float",       		&GameData.ReadSpeedPerSecond_float);
+	doc.BindInt64 ("Game_NVN_Timestamp_int",       				&GameData.NVN.timestamp_int);
+	doc.BindInt64 ("Game_NVN_SamplesPassed_int",       			&GameData.NVN.samplesPassed_int);
+	doc.BindInt64 ("Game_NVN_InputVertices_int",       			&GameData.NVN.inputVertices_int);
+	doc.BindInt64 ("Game_NVN_InputPrimitives_int",    			&GameData.NVN.inputPrimitives_int);
+	doc.BindInt64 ("Game_NVN_VertexShaderInvocations_int",    	&GameData.NVN.vertexShaderInvocations_int);
+	doc.BindInt64 ("Game_NVN_TessControlShaderInvocations_int", &GameData.NVN.tessControlShaderInvocations_int);
+	doc.BindInt64 ("Game_NVN_TessEvaluationShaderInvocations_int", &GameData.NVN.tessEvaluationShaderInvocations_int);
+	doc.BindInt64 ("Game_NVN_GeometryShaderInvocations_int", 	&GameData.NVN.geometryShaderInvocations_int);
+	doc.BindInt64 ("Game_NVN_FragmentShaderInvocations_int", 	&GameData.NVN.fragmentShaderInvocations_int);
+	doc.BindInt64 ("Game_NVN_TessEvaluationShaderPrimitives_int",  &GameData.NVN.tessEvaluationShaderPrimitives_int);
+	doc.BindInt64 ("Game_NVN_GeometryShaderPrimitives_int",		&GameData.NVN.geometryShaderPrimitives_int);
+	doc.BindInt64 ("Game_NVN_ClipperInputPrimitives_int",		&GameData.NVN.clipperInputPrimitives_int);
+	doc.BindInt64 ("Game_NVN_ClipperOutputPrimitives_int",		&GameData.NVN.clipperOutputPrimitives_int);
+	doc.BindInt64 ("Game_NVN_PrimitivesGenerated_int",			&GameData.NVN.primitivesGenerated_int);
+	doc.BindInt64 ("Game_NVN_TransformFeedbackPrimitivesWritten_int", &GameData.NVN.transformFeedbackPrimitivesWritten_int);
+	doc.BindInt64 ("Game_NVN_TilesProcessedByZcull_int", 		&GameData.NVN.tilesProcessedByZcull_int);
+	doc.BindInt64 ("Game_NVN_PixelBlocksBehindPrimitivesAndCulled_int", &GameData.NVN.pixelBlocksBehindPrimitivesAndCulled_int);
+	doc.BindInt64 ("Game_NVN_PixelBlocksInFrontOfPrimitivesCulled_int", &GameData.NVN.pixelBlocksInFrontOfPrimitivesCulled_int);
+	doc.BindInt64 ("Game_NVN_PixelBlocksFailedStencilTestAndCulled_int", &GameData.NVN.pixelBlocksFailedStencilTestAndCulled_int);
+	doc.BindResolutionArray("Game_ResolutionRenderCalls_int",   GameData.ResolutionRenderCalls_int);
+	doc.BindResolutionArray("Game_ResolutionViewportCalls_int", GameData.ResolutionViewportCalls_int);
+	doc.BindInt64 ("System_DisplayRefreshRate_int",       		&SystemData.DisplayRefreshRate_int);
+	doc.BindBool  ("System_IsDocked",                     		&SystemData.IsDocked);
+	doc.BindInt64 ("System_KeysDown_int",                 		&SystemData.KeysDown_int);
+	doc.BindInt64 ("System_KeysHeld_int",                 		&SystemData.KeysHeld_int);
 	doc.BindInt64 ("System_ClockSecond_int",                 	&SystemData.ClockSecond);
 	doc.BindInt64 ("System_ClockMinute_int",                 	&SystemData.ClockMinute);
 	doc.BindInt64 ("System_ClockHour_int",                  	&SystemData.ClockHour);
@@ -295,13 +356,13 @@ inline void BindAllPredefined(smd::Document& doc) {
 	doc.BindInt64 ("System_CalendarDay_int",                  	&SystemData.CalendarDay);
 	doc.BindInt64 ("System_OverlayRenderingFrameTimeInNs_int",  &SystemData.OverlayRenderingFrameTimeInNs);
 	doc.BindInt64 ("System_OverlayMemoryLeftInB_int",           &SystemData.OverlayMemoryLeftInB);
-    doc.BindString("formattedKeyCombo",                  		&SystemData.formattedKeyCombo);
-    doc.BindBool  ("Misc_IsWiFiPassphrase",               		&MiscData.IsWiFiPassphrase);
-    doc.BindInt64 ("Misc_NvDecHz_int",                    		&MiscData.NvDecHz_int);
-    doc.BindInt64 ("Misc_NvEncHz_int",                    		&MiscData.NvEncHz_int);
-    doc.BindInt64 ("Misc_NvJpgHz_int",                    		&MiscData.NvJpgHz_int);
-    doc.BindInt64 ("Misc_NetworkConnectionType_int",      		&MiscData.NetworkConnectionType_int);
-    doc.BindString("Misc_WiFiPassphrase_str",             		&MiscData.WiFiPassphrase_str);
+	doc.BindString("formattedKeyCombo",                  		&SystemData.formattedKeyCombo);
+	doc.BindBool  ("Misc_IsWiFiPassphrase",               		&MiscData.IsWiFiPassphrase);
+	doc.BindInt64 ("Misc_NvDecHz_int",                    		&MiscData.NvDecHz_int);
+	doc.BindInt64 ("Misc_NvEncHz_int",                    		&MiscData.NvEncHz_int);
+	doc.BindInt64 ("Misc_NvJpgHz_int",                    		&MiscData.NvJpgHz_int);
+	doc.BindInt64 ("Misc_NetworkConnectionType_int",      		&MiscData.NetworkConnectionType_int);
+	doc.BindString("Misc_WiFiPassphrase_str",             		&MiscData.WiFiPassphrase_str);
 }
 
 //Sixaxis
@@ -321,26 +382,26 @@ struct Vec3 {
 };
 
 static inline Vec3 vec3_sub(Vec3 a, Vec3 b) {
-    return (Vec3){ a.x - b.x, a.y - b.y, a.z - b.z };
+	return (Vec3){ a.x - b.x, a.y - b.y, a.z - b.z };
 }
 
 static inline Vec3 vec3_scale(Vec3 v, float s) {
-    return (Vec3){ v.x * s, v.y * s, v.z * s };
+	return (Vec3){ v.x * s, v.y * s, v.z * s };
 }
 
 static inline float vec3_dot(Vec3 a, Vec3 b) {
-    return a.x*b.x + a.y*b.y + a.z*b.z;
+	return a.x*b.x + a.y*b.y + a.z*b.z;
 }
 
 static inline Vec3 vec3_normalize(Vec3 v) {
-    float len = sqrtf(vec3_dot(v, v));
-    if (len < 1e-6f) return (Vec3){0, 0, 0};
-    return vec3_scale(v, 1.0f / len);
+	float len = sqrtf(vec3_dot(v, v));
+	if (len < 1e-6f) return (Vec3){0, 0, 0};
+	return vec3_scale(v, 1.0f / len);
 }
 
 struct GyroCursor {
-    float x, y;
-    float sensitivity;
+	float x, y;
+	float sensitivity;
 };
 
 // Strip a line-comment starting with ';', but ignore ';' inside "..." strings.
@@ -369,17 +430,17 @@ ALWAYS_INLINE bool isKeyComboPressed(uint64_t keysHeld, uint64_t keysDown, uint6
 }
 
 ALWAYS_INLINE bool isValidRGBA4Color(const std::string& hexColor) {
-    for (char c : hexColor) {
-        if (!isxdigit(c)) {
-            return false;
-        }
-    }
-    return true;
+	for (char c : hexColor) {
+		if (!isxdigit(c)) {
+			return false;
+		}
+	}
+	return true;
 }
 
 struct Designs {
-    std::string name;
-    bool is_directory;
+	std::string name;
+	bool is_directory;
 };
 
 // Non-inline function declarations
